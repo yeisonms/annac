@@ -21,11 +21,11 @@ export function AppSidebar() {
   const { isAdmin } = useAuth();
 
   const items = [
-    ...(isAdmin ? [{ title: "Dashboard", url: "/", icon: LayoutDashboard }] : []),
-    { title: "Clientes", url: isAdmin ? "/clientes" : "/", icon: Users },
-    { title: "Ventas", url: "/ventas", icon: Plane },
-    { title: "Cartera", url: "/cartera", icon: Wallet },
-    { title: "Proveedores", url: "/proveedores", icon: Building2 },
+    ...(isAdmin ? [{ title: "Dashboard", url: "/admin", icon: LayoutDashboard }] : []),
+    { title: "Clientes", url: "/admin/clientes", icon: Users },
+    { title: "Ventas", url: "/admin/ventas", icon: Plane },
+    { title: "Cartera", url: "/admin/cartera", icon: Wallet },
+    { title: "Proveedores", url: "/admin/proveedores", icon: Building2 },
   ];
 
   return (
