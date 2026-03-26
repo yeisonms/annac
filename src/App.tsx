@@ -10,6 +10,7 @@ import Clientes from "@/pages/Clientes";
 import Ventas from "@/pages/Ventas";
 import Cartera from "@/pages/Cartera";
 import Proveedores from "@/pages/Proveedores";
+import LandingPage from "@/pages/LandingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -17,16 +18,24 @@ const queryClient = new QueryClient();
 function AppRoutes() {
   const { isAdmin } = useAuth();
   return (
-    <AppLayout>
-      <Routes>
-        <Route path="/" element={isAdmin ? <Dashboard /> : <Clientes />} />
-        <Route path="/clientes" element={<Clientes />} />
-        <Route path="/ventas" element={<Ventas />} />
-        <Route path="/cartera" element={<Cartera />} />
-        <Route path="/proveedores" element={<Proveedores />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </AppLayout>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route
+        path="/admin/*"
+        element={
+          <AppLayout>
+            <Routes>
+              <Route index element={isAdmin ? <Dashboard /> : <Clientes />} />
+              <Route path="clientes" element={<Clientes />} />
+              <Route path="ventas" element={<Ventas />} />
+              <Route path="cartera" element={<Cartera />} />
+              <Route path="proveedores" element={<Proveedores />} />
+            </Routes>
+          </AppLayout>
+        }
+      />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 
