@@ -12,30 +12,35 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center justify-between border-b bg-card px-4 shrink-0">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger />
-              <span className="text-sm font-medium text-muted-foreground hidden sm:inline">
-                Sistema de Gestión Financiera — Agencia de Viajes
-              </span>
-            </div>
+        <div className="flex-1 flex flex-col min-w-0 bg-muted/10">
+          <header className="h-16 flex items-center justify-between border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 shrink-0 sticky top-0 z-10 transition-all duration-200">
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-1.5">
+              <SidebarTrigger className="hover:bg-accent/50 transition-colors" />
+              <div className="hidden sm:flex flex-col">
+                <span className="text-sm font-semibold tracking-tight text-foreground">
+                  Sistema de Gestión Financiera
+                </span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  ANNAC — Agencia de Viajes
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 rounded-full border border-border/50 bg-background/50 backdrop-blur px-4 py-1.5 shadow-sm transition-all hover:shadow-md">
                 <User className="h-4 w-4 text-muted-foreground" />
-                <Label htmlFor="role-toggle" className="text-xs cursor-pointer select-none">Agente</Label>
+                <Label htmlFor="role-toggle" className="text-xs font-medium cursor-pointer select-none">Agente</Label>
                 <Switch
                   id="role-toggle"
                   checked={isAdmin}
                   onCheckedChange={(checked) => setRole(checked ? "admin" : "agente")}
                   className="data-[state=checked]:bg-primary"
                 />
-                <Label htmlFor="role-toggle" className="text-xs cursor-pointer select-none">Admin</Label>
-                <Shield className={`h-4 w-4 ${isAdmin ? "text-primary" : "text-muted-foreground"}`} />
+                <Label htmlFor="role-toggle" className="text-xs font-medium cursor-pointer select-none">Admin</Label>
+                <Shield className={`h-4 w-4 transition-colors ${isAdmin ? "text-primary" : "text-muted-foreground"}`} />
               </div>
             </div>
           </header>
-          <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
+          <main className="flex-1 overflow-auto p-4 md:p-8">{children}</main>
         </div>
       </div>
     </SidebarProvider>
