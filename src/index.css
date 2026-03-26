@@ -1,10 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
 
 @layer base {
   :root {
@@ -26,8 +24,8 @@ All colors MUST be HSL.
     --muted: 210 15% 95%;
     --muted-foreground: 215 12% 50%;
 
-    --accent: 210 20% 92%;
-    --accent-foreground: 215 25% 20%;
+    --accent: 16 85% 58%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -36,7 +34,7 @@ All colors MUST be HSL.
     --input: 214 20% 90%;
     --ring: 215 80% 48%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
@@ -44,6 +42,13 @@ All colors MUST be HSL.
     --warning-foreground: 0 0% 100%;
     --danger: 0 72% 51%;
     --danger-foreground: 0 0% 100%;
+
+    --sky: 197 71% 52%;
+    --sky-foreground: 0 0% 100%;
+    --deep: 215 80% 22%;
+    --deep-foreground: 0 0% 100%;
+    --coral: 16 85% 58%;
+    --coral-foreground: 0 0% 100%;
 
     --sidebar-background: 215 25% 15%;
     --sidebar-foreground: 210 20% 90%;
@@ -58,28 +63,20 @@ All colors MUST be HSL.
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
     --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
-
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
+    --accent: 16 85% 58%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
@@ -101,5 +98,10 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
   }
+}
+
+html {
+  scroll-behavior: smooth;
 }
