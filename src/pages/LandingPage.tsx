@@ -6,6 +6,7 @@ import { DestinationsSection } from "@/components/landing/DestinationsSection";
 import { AboutSection } from "@/components/landing/AboutSection";
 import { QuoteFormSection } from "@/components/landing/QuoteFormSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
+import { PaymentMethodsSection } from "@/components/landing/PaymentMethodsSection";
 
 const LandingPage = () => {
   return (
