@@ -41,16 +41,6 @@ export function LandingNavbar() {
             <Button variant="outline" size="sm" asChild>
               <a href="#cotizar">Contacto</a>
             </Button>
-            <Button
-              size="sm"
-              className="bg-[hsl(142,71%,45%)] hover:bg-[hsl(142,71%,38%)] text-white gap-2"
-              asChild
-            >
-              <a href="https://wa.me/573001234567" target="_blank" rel="noopener noreferrer">
-                <MessageCircle className="h-4 w-4" />
-                WhatsApp
-              </a>
-            </Button>
           </div>
 
           {/* Mobile hamburger */}
