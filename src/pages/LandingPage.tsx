@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { ServicesSection } from "@/components/landing/ServicesSection";
 import { DestinationsSection } from "@/components/landing/DestinationsSection";
 import { AboutSection } from "@/components/landing/AboutSection";
+import { SocialProofSection } from "@/components/landing/SocialProofSection";
 import { QuoteFormSection } from "@/components/landing/QuoteFormSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { PaymentMethodsSection } from "@/components/landing/PaymentMethodsSection";
