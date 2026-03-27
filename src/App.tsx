@@ -21,6 +21,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/destinos/:slug" element={<DestinationDetail />} />
       <Route
         path="/admin/*"
         element={
