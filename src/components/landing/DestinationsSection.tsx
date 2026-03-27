@@ -1,29 +1,5 @@
-const destinations = [
-  {
-    name: "Colombia",
-    img: "https://images.unsplash.com/photo-1583997052103-b4a1cb974ce5?w=600&h=400&fit=crop",
-  },
-  {
-    name: "El Caribe",
-    img: "https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?w=600&h=400&fit=crop",
-  },
-  {
-    name: "Norteamérica",
-    img: "https://images.unsplash.com/photo-1485738422979-f5c462d49f04?w=600&h=400&fit=crop",
-  },
-  {
-    name: "Europa",
-    img: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=600&h=400&fit=crop",
-  },
-  {
-    name: "Asia",
-    img: "https://images.unsplash.com/photo-1528164344705-47542687000d?w=600&h=400&fit=crop",
-  },
-  {
-    name: "Sudamérica",
-    img: "https://images.unsplash.com/photo-1526392060635-9d6019884377?w=600&h=400&fit=crop",
-  },
-];
+import { Link } from "react-router-dom";
+import { destinationCategories } from "@/data/destinationsData";
 
 export function DestinationsSection() {
   return (
@@ -39,9 +15,10 @@ export function DestinationsSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {destinations.map((d) => (
-            <div
-              key={d.name}
+          {destinationCategories.map((d) => (
+            <Link
+              key={d.slug}
+              to={`/destinos/${d.slug}`}
               className="group relative overflow-hidden rounded-xl aspect-[3/2] cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
             >
               <img
@@ -53,8 +30,11 @@ export function DestinationsSection() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
               <div className="absolute bottom-0 left-0 right-0 p-5">
                 <h3 className="text-xl font-bold text-white">{d.name}</h3>
+                <p className="text-sm text-white/70 mt-1">
+                  {d.destinations.length} destinos
+                </p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

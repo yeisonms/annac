@@ -11,6 +11,7 @@ import Ventas from "@/pages/Ventas";
 import Cartera from "@/pages/Cartera";
 import Proveedores from "@/pages/Proveedores";
 import LandingPage from "@/pages/LandingPage";
+import DestinationDetail from "@/pages/DestinationDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
