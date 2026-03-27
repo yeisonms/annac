@@ -17,6 +17,7 @@ const LandingPage = () => {
       <ServicesSection />
       <DestinationsSection />
       <AboutSection />
+      <SocialProofSection />
       <QuoteFormSection />
       <PaymentMethodsSection />
       <LandingFooter />
