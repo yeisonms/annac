@@ -1,5 +1,4 @@
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
-import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { ServicesSection } from "@/components/landing/ServicesSection";
 import { DestinationsSection } from "@/components/landing/DestinationsSection";
