@@ -1,4 +1,5 @@
 import { Shield, Award, Users } from "lucide-react";
+import worldMapTravel from "@/assets/world-map-travel.jpg";
 
 export function AboutSection() {
   return (
