@@ -49,7 +49,7 @@ export const destinationCategories: DestinationCategory[] = [
   {
     slug: "norteamerica",
     name: "Norteamérica",
-    img: "https://images.unsplash.com/photo-1485738422979-f5c462d49f04?w=600&h=400&fit=crop",
+    img: "https://images.unsplash.com/photo-1534430480872-3498386e7856?w=600&h=400&fit=crop",
     destinations: [
       "Miami", "Orlando", "New York", "Los Ángeles",
       "Las Vegas (EE.UU.)", "Toronto", "Vancouver", "Quebec (Canadá)",
