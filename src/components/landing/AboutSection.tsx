@@ -9,8 +9,8 @@ export function AboutSection() {
           {/* Image */}
           <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-[4/3]">
             <img
-              src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&h=600&fit=crop"
-              alt="Vista desde las nubes"
+              src={worldMapTravel}
+              alt="Mapa mundi de viajes por el mundo"
               loading="lazy"
               className="w-full h-full object-cover"
             />
