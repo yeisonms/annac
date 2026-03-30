@@ -14,7 +14,10 @@ export function AboutSection() {
               loading="lazy"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--deep))]/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--deep))]/60 via-[hsl(var(--deep))]/20 to-transparent" />
+            <h3 className="absolute inset-0 flex items-center justify-center text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] tracking-tight text-center px-6">
+              Viajes a tu medida
+            </h3>
             <div className="absolute bottom-6 left-6 bg-card/90 backdrop-blur-sm rounded-xl px-5 py-3 shadow-lg">
               <p className="text-xs text-muted-foreground">Registro Nacional de Turismo</p>
               <p className="text-lg font-bold text-primary">RNT 228975</p>
