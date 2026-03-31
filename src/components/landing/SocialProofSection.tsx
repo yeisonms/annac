@@ -49,12 +49,12 @@ const reviews = [
   },
 ];
 
-const successCases = [
-  { src: successCase1, alt: "Experiencia viajero Cancún" },
-  { src: successCase2, alt: "Experiencia viajero Crucero Caribe" },
-  { src: successCase3, alt: "Experiencia viajero Europa" },
-  { src: successCase4, alt: "Experiencia viajero San Andrés" },
-];
+interface CasoExito {
+  id: string;
+  nombre_cliente: string;
+  url_captura: string;
+  prioridad: number;
+}
 
 function GoogleLogo() {
   return (
