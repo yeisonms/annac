@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import logoAnnac from "@/assets/logo-annac.png";
 
 const navLinks = [
-  { label: "Inicio", href: "#inicio" },
-  { label: "Servicios", href: "#servicios" },
-  { label: "Destinos", href: "#destinos" },
-  { label: "Nosotros", href: "#nosotros" },
-  { label: "Cotizar", href: "#cotizar" },
+  { label: "Inicio", href: "/#inicio" },
+  { label: "Servicios", href: "/#servicios" },
+  { label: "Destinos", href: "/#destinos" },
+  { label: "Nosotros", href: "/#nosotros" },
+  { label: "Cotizar", href: "/#cotizar" },
 ];
 
 export function LandingNavbar() {
