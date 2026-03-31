@@ -85,6 +85,15 @@ const DestinationDetail = () => {
         </div>
       </section>
 
+      <DestinationModal
+        open={!!selectedDest}
+        onOpenChange={(open) => !open && setSelectedDest(null)}
+        destinationName={selectedDest || ""}
+        onQuote={(dest) => {
+          navigate(`/?destino=${encodeURIComponent(dest)}#cotizar`);
+        }}
+      />
+
       <LandingFooter />
     </div>
   );
