@@ -56,10 +56,10 @@ const DestinationDetail = () => {
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {category.destinations.map((dest) => (
-            <a
+            <button
               key={dest}
-              href="/#cotizar"
-              className="group flex items-center gap-4 p-5 rounded-xl bg-card border border-border hover:border-primary/40 hover:shadow-md transition-all duration-300"
+              onClick={() => setSelectedDest(dest)}
+              className="group flex items-center gap-4 p-5 rounded-xl bg-card border border-border hover:border-primary/40 hover:shadow-md transition-all duration-300 text-left w-full"
             >
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
                 <MapPin className="h-5 w-5" />
@@ -70,7 +70,7 @@ const DestinationDetail = () => {
                 </h3>
               </div>
               <Plane className="h-4 w-4 ml-auto text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-            </a>
+            </button>
           ))}
         </div>
 
