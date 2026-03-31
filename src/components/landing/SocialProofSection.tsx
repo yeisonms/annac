@@ -1,9 +1,8 @@
 import { Star } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import successCase1 from "@/assets/success-case-1.jpg";
-import successCase2 from "@/assets/success-case-2.jpg";
-import successCase3 from "@/assets/success-case-3.jpg";
-import successCase4 from "@/assets/success-case-4.jpg";
+import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 const reviews = [
   {
