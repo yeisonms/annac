@@ -89,7 +89,7 @@ export function QuoteFormSection() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="destino">Destino *</Label>
-                  <Select required>
+                  <Select value={selectedDestino} onValueChange={setSelectedDestino} required>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecciona un destino" />
                     </SelectTrigger>
