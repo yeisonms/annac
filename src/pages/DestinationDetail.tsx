@@ -1,12 +1,16 @@
-import { useParams, Link } from "react-router-dom";
+import { useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, Plane } from "lucide-react";
 import { destinationCategories } from "@/data/destinationsData";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { LandingFooter } from "@/components/landing/LandingFooter";
+import { DestinationModal } from "@/components/landing/DestinationModal";
 
 const DestinationDetail = () => {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const category = destinationCategories.find((c) => c.slug === slug);
+  const [selectedDest, setSelectedDest] = useState<string | null>(null);
 
   if (!category) {
     return (
