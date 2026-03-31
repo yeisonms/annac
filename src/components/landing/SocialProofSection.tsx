@@ -98,6 +98,20 @@ function ReviewCard({ review }: { review: typeof reviews[0] }) {
 }
 
 export function SocialProofSection() {
+  const [casos, setCasos] = useState<CasoExito[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from("casos_exito")
+      .select("id, nombre_cliente, url_captura, prioridad")
+      .order("prioridad", { ascending: false })
+      .then(({ data }) => {
+        if (data) setCasos(data);
+        setLoading(false);
+      });
+  }, []);
+
   return (
     <section className="py-16 lg:py-24 bg-background" id="testimonios">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -122,7 +136,6 @@ export function SocialProofSection() {
             <span className="text-sm text-muted-foreground">· 120+ reseñas</span>
           </div>
 
-          {/* Mobile: horizontal scroll / Desktop: grid */}
           <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible sm:pb-0">
             {reviews.map((review) => (
               <div key={review.name} className="snap-start shrink-0 w-[85vw] sm:w-auto">
@@ -141,25 +154,31 @@ export function SocialProofSection() {
             Capturas reales de experiencias inolvidables
           </p>
 
-          {/* Mobile: horizontal scroll / Desktop: grid */}
           <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible sm:pb-0">
-            {successCases.map((item, idx) => (
-              <div
-                key={idx}
-                className="snap-start shrink-0 w-[65vw] sm:w-auto group cursor-pointer"
-              >
-                <div className="overflow-hidden rounded-2xl border border-border/50 shadow-sm hover:shadow-lg transition-all duration-300">
-                  <img
-                    src={item.src}
-                    alt={item.alt}
-                    loading="lazy"
-                    width={512}
-                    height={896}
-                    className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-              </div>
-            ))}
+            {loading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="snap-start shrink-0 w-[65vw] sm:w-auto">
+                    <Skeleton className="w-full aspect-[9/16] rounded-2xl" />
+                  </div>
+                ))
+              : casos.map((caso) => (
+                  <div
+                    key={caso.id}
+                    className="snap-start shrink-0 w-[65vw] sm:w-auto group cursor-pointer"
+                  >
+                    <div className="overflow-hidden rounded-2xl border border-border/50 shadow-sm hover:shadow-lg transition-all duration-300">
+                      <img
+                        src={caso.url_captura}
+                        alt={`Experiencia de ${caso.nombre_cliente}`}
+                        loading="lazy"
+                        className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-foreground text-center">
+                      {caso.nombre_cliente}
+                    </p>
+                  </div>
+                ))}
           </div>
         </div>
       </div>
