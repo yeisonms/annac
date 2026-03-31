@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,24 @@ const destinos = [
 
 export function QuoteFormSection() {
   const [loading, setLoading] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedDestino, setSelectedDestino] = useState<string>("");
+
+  useEffect(() => {
+    const destino = searchParams.get("destino");
+    if (destino) {
+      // Check if it matches a known category, otherwise use "Otro"
+      const match = destinos.find((d) => d.toLowerCase() === destino.toLowerCase());
+      setSelectedDestino(match || "Otro");
+      // Scroll to the form
+      setTimeout(() => {
+        document.getElementById("cotizar")?.scrollIntoView({ behavior: "smooth" });
+      }, 300);
+      // Clean up the URL param
+      searchParams.delete("destino");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
