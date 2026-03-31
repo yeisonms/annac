@@ -39,7 +39,7 @@ export function LandingNavbar() {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-3">
             <Button variant="outline" size="sm" asChild>
-              <a href="#cotizar">Contacto</a>
+              <a href="/#cotizar">Contacto</a>
             </Button>
           </div>
 
