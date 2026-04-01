@@ -109,7 +109,7 @@ export const getSemaforoStatus = (fechaLimite: string): "verde" | "amarillo" | "
   hoy.setHours(0, 0, 0, 0);
   const limite = new Date(fechaLimite + "T00:00:00");
   const diffDays = Math.ceil((limite.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays < 0 || diffDays === 0) return "rojo";
-  if (diffDays <= 3) return "amarillo";
+  if (diffDays <= 0) return "rojo";
+  if (diffDays <= 7) return "amarillo";
   return "verde";
 };
