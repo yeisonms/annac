@@ -45,7 +45,7 @@ export default function Cartera() {
     const { data, error } = await supabase
       .from("ventas")
       .select("id, destino, valor_total_venta, saldo_cliente, plazo_pago_cliente, estado_pago_cliente, clientes(nombre_cliente)")
-      .or("estado_pago_cliente.eq.PENDIENTE,estado_pago_cliente.eq.Parcial,saldo_cliente.gt.0")
+      .or("estado_pago_cliente.eq.PENDIENTE,estado_pago_cliente.eq.PARCIAL,saldo_cliente.gt.0")
       .order("plazo_pago_cliente", { ascending: true });
 
     if (error) {
