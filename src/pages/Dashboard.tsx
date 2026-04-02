@@ -83,7 +83,10 @@ export default function Dashboard() {
         "Ingreso Agencia": Number(v.ingreso_agencia || 0),
       }));
       setChartData(chartItems);
-      setVencimientos(venc as Vencimiento[]);
+      setVencimientos((venc || []).map((v: any) => ({
+        ...v,
+        clientes: Array.isArray(v.clientes) ? v.clientes[0] : v.clientes,
+      })) as Vencimiento[]);
     } catch (err) {
       console.error("Error fetching dashboard data", err);
     } finally {
