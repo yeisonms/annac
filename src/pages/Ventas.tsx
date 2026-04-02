@@ -279,7 +279,7 @@ export default function Ventas() {
                         <Badge variant={
                           v.estado_pago_cliente === "COMPLETO" || v.estado_pago_cliente === "Pagado"
                             ? "default"
-                            : v.estado_pago_cliente === "Parcial"
+                            : v.estado_pago_cliente === "PARCIAL"
                               ? "secondary"
                               : "destructive"
                         }>
