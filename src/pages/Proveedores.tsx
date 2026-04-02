@@ -90,6 +90,17 @@ export default function ProveedoresPage() {
   const [cuentas, setCuentas] = useState<CuentaPorPagarRow[]>([]);
   const [loadingCuentas, setLoadingCuentas] = useState(true);
 
+  // --- Nueva Cuenta por Pagar form ---
+  const [openCuenta, setOpenCuenta] = useState(false);
+  const [savingCuenta, setSavingCuenta] = useState(false);
+  const [ventasOptions, setVentasOptions] = useState<{ id: string; label: string }[]>([]);
+  const [cuentaForm, setCuentaForm] = useState({
+    venta_id: "",
+    proveedor_id: "",
+    monto_deuda: "",
+    plazo_pago_proveedor: undefined as Date | undefined,
+  });
+
   const fetchCuentas = useCallback(async () => {
     setLoadingCuentas(true);
     const { data, error } = await supabase
@@ -101,7 +112,46 @@ export default function ProveedoresPage() {
     setLoadingCuentas(false);
   }, []);
 
-  useEffect(() => { fetchProveedores(); fetchCuentas(); }, [fetchProveedores, fetchCuentas]);
+  const fetchVentasOptions = useCallback(async () => {
+    const { data } = await supabase
+      .from("ventas")
+      .select("id, destino, clientes(nombre_cliente)")
+      .order("fecha_venta", { ascending: false });
+    setVentasOptions(
+      (data || []).map((v: any) => ({
+        id: v.id,
+        label: `${v.clientes?.nombre_cliente || "Sin cliente"} — ${v.destino}`,
+      }))
+    );
+  }, []);
+
+  useEffect(() => { fetchProveedores(); fetchCuentas(); fetchVentasOptions(); }, [fetchProveedores, fetchCuentas, fetchVentasOptions]);
+
+  const handleSaveCuenta = async () => {
+    if (!cuentaForm.venta_id || !cuentaForm.proveedor_id || !cuentaForm.monto_deuda) {
+      toast.error("Completa todos los campos obligatorios");
+      return;
+    }
+    setSavingCuenta(true);
+    const { error } = await supabase.from("cuentas_por_pagar").insert({
+      venta_id: cuentaForm.venta_id,
+      proveedor_id: cuentaForm.proveedor_id,
+      monto_deuda: parseFloat(cuentaForm.monto_deuda),
+      plazo_pago_proveedor: cuentaForm.plazo_pago_proveedor
+        ? format(cuentaForm.plazo_pago_proveedor, "yyyy-MM-dd")
+        : null,
+      estado_pago: "PENDIENTE",
+    });
+    if (error) {
+      toast.error("Error al guardar: " + error.message);
+    } else {
+      toast.success("Cuenta por pagar registrada");
+      setCuentaForm({ venta_id: "", proveedor_id: "", monto_deuda: "", plazo_pago_proveedor: undefined });
+      setOpenCuenta(false);
+      fetchCuentas();
+    }
+    setSavingCuenta(false);
+  };
 
   const handleMarcarPagado = async (id: string) => {
     const { error } = await supabase
