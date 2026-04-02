@@ -64,7 +64,7 @@ export default function Cartera() {
 
     setSaving(true);
     const nuevoSaldo = selectedVenta.saldo_cliente - abonoForm.monto;
-    const nuevoEstado = nuevoSaldo === 0 ? "COMPLETO" : "Parcial";
+    const nuevoEstado = nuevoSaldo === 0 ? "COMPLETO" : "PARCIAL";
 
     // 1. INSERT pago
     const { error: errorPago } = await supabase.from("pagos_clientes").insert({
