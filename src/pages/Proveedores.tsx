@@ -177,6 +177,65 @@ export default function ProveedoresPage() {
         {/* ===== CUENTAS POR PAGAR ===== */}
         <TabsContent value="cuentas">
           <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-lg">Cuentas por Pagar Pendientes</CardTitle>
+              <Dialog open={openCuenta} onOpenChange={setOpenCuenta}>
+                <DialogTrigger asChild>
+                  <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Nueva Cuenta por Pagar</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Nueva Cuenta por Pagar</DialogTitle></DialogHeader>
+                  <div className="space-y-3 py-2">
+                    <div className="grid gap-1.5">
+                      <Label>Venta (Reserva) *</Label>
+                      <Select value={cuentaForm.venta_id} onValueChange={(v) => setCuentaForm((p) => ({ ...p, venta_id: v }))}>
+                        <SelectTrigger><SelectValue placeholder="Selecciona una venta" /></SelectTrigger>
+                        <SelectContent>
+                          {ventasOptions.map((v) => (
+                            <SelectItem key={v.id} value={v.id}>{v.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>Proveedor *</Label>
+                      <Select value={cuentaForm.proveedor_id} onValueChange={(v) => setCuentaForm((p) => ({ ...p, proveedor_id: v }))}>
+                        <SelectTrigger><SelectValue placeholder="Selecciona un proveedor" /></SelectTrigger>
+                        <SelectContent>
+                          {proveedores.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>Monto de la Deuda *</Label>
+                      <Input type="number" placeholder="0" value={cuentaForm.monto_deuda} onChange={(e) => setCuentaForm((p) => ({ ...p, monto_deuda: e.target.value }))} />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>Plazo Máximo de Pago</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !cuentaForm.plazo_pago_proveedor && "text-muted-foreground")}>
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {cuentaForm.plazo_pago_proveedor ? format(cuentaForm.plazo_pago_proveedor, "yyyy-MM-dd") : "Selecciona fecha"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar mode="single" selected={cuentaForm.plazo_pago_proveedor} onSelect={(d) => setCuentaForm((p) => ({ ...p, plazo_pago_proveedor: d }))} initialFocus className={cn("p-3 pointer-events-auto")} />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button onClick={handleSaveCuenta} disabled={savingCuenta}>
+                      {savingCuenta && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                      Guardar
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
