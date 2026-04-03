@@ -26,6 +26,7 @@ export function AppSidebar() {
     { title: "Ventas", url: "/admin/ventas", icon: Plane },
     { title: "Cartera", url: "/admin/cartera", icon: Wallet },
     { title: "Proveedores", url: "/admin/proveedores", icon: Building2 },
+    ...(isAdmin ? [{ title: "Historial", url: "/admin/historial", icon: History }] : []),
   ];
 
   return (

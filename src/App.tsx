@@ -67,6 +67,7 @@ function AppRoutes() {
                 <Route path="ventas" element={<Ventas />} />
                 <Route path="cartera" element={<Cartera />} />
                 <Route path="proveedores" element={<Proveedores />} />
+                <Route path="historial" element={<Historial />} />
               </Routes>
             </AppLayout>
           </ProtectedRoute>
