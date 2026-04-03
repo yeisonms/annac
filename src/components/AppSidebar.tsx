@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Plane, Wallet, Building2 } from "lucide-react";
+import { LayoutDashboard, Users, Plane, Wallet, Building2, History } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +26,7 @@ export function AppSidebar() {
     { title: "Ventas", url: "/admin/ventas", icon: Plane },
     { title: "Cartera", url: "/admin/cartera", icon: Wallet },
     { title: "Proveedores", url: "/admin/proveedores", icon: Building2 },
+    ...(isAdmin ? [{ title: "Historial", url: "/admin/historial", icon: History }] : []),
   ];
 
   return (
