@@ -10,6 +10,7 @@ import Clientes from "@/pages/Clientes";
 import Ventas from "@/pages/Ventas";
 import Cartera from "@/pages/Cartera";
 import Proveedores from "@/pages/Proveedores";
+import Historial from "@/pages/Historial";
 import LandingPage from "@/pages/LandingPage";
 import DestinationDetail from "@/pages/DestinationDetail";
 import Login from "@/pages/Login";
