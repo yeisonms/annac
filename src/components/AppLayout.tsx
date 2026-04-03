@@ -1,12 +1,11 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Shield, User } from "lucide-react";
+import { LogOut, Shield, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { role, setRole, isAdmin } = useAuth();
+  const { role, isAdmin, user, signOut } = useAuth();
 
   return (
     <SidebarProvider>
@@ -26,18 +25,26 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3 rounded-full border border-border/50 bg-background/50 backdrop-blur px-4 py-1.5 shadow-sm transition-all hover:shadow-md">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <Label htmlFor="role-toggle" className="text-xs font-medium cursor-pointer select-none">Agente</Label>
-                <Switch
-                  id="role-toggle"
-                  checked={isAdmin}
-                  onCheckedChange={(checked) => setRole(checked ? "admin" : "agente")}
-                  className="data-[state=checked]:bg-primary"
-                />
-                <Label htmlFor="role-toggle" className="text-xs font-medium cursor-pointer select-none">Admin</Label>
-                <Shield className={`h-4 w-4 transition-colors ${isAdmin ? "text-primary" : "text-muted-foreground"}`} />
+              <div className="flex items-center gap-2 rounded-full border border-border/50 bg-background/50 backdrop-blur px-4 py-1.5 shadow-sm">
+                {isAdmin ? (
+                  <Shield className="h-4 w-4 text-primary" />
+                ) : (
+                  <User className="h-4 w-4 text-muted-foreground" />
+                )}
+                <span className="text-xs font-medium capitalize">{role}</span>
+                <span className="text-xs text-muted-foreground hidden sm:inline">
+                  — {user?.email}
+                </span>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={signOut}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <LogOut className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Salir</span>
+              </Button>
             </div>
           </header>
           <main className="flex-1 overflow-auto p-4 md:p-8">{children}</main>
