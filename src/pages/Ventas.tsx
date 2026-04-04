@@ -248,8 +248,8 @@ export default function Ventas() {
                   {isAdmin && <TableHead className="text-right">Costo Prov.</TableHead>}
                   {isAdmin && <TableHead className="text-right">Ingreso Agencia</TableHead>}
                   <TableHead className="text-right">Saldo</TableHead>
-                  <TableHead>Estado</TableHead>
-                  {isAdmin && <TableHead className="text-right">Acciones</TableHead>}
+                   <TableHead>Estado</TableHead>
+                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
