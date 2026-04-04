@@ -256,14 +256,14 @@ export default function Ventas() {
                 {loading ? (
                   Array.from({ length: 4 }).map((_, i) => (
                     <TableRow key={i}>
-                      {Array.from({ length: isAdmin ? 9 : 6 }).map((_, j) => (
+                      {Array.from({ length: isAdmin ? 9 : 7 }).map((_, j) => (
                         <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                       ))}
                     </TableRow>
                   ))
                 ) : ventas.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 9 : 6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={isAdmin ? 9 : 7} className="text-center py-8 text-muted-foreground">
                       No hay reservas registradas
                     </TableCell>
                   </TableRow>
