@@ -11,8 +11,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Eye } from "lucide-react";
 import { toast } from "sonner";
+import VentaDetailSheet from "@/components/VentaDetailSheet";
 
 interface ClienteOption {
   id: string;
@@ -61,6 +62,7 @@ export default function Ventas() {
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [detailVenta, setDetailVenta] = useState<VentaRow | null>(null);
 
   const ingreso = form.valor_total_venta - form.costo_por_proveedor;
 
@@ -246,22 +248,22 @@ export default function Ventas() {
                   {isAdmin && <TableHead className="text-right">Costo Prov.</TableHead>}
                   {isAdmin && <TableHead className="text-right">Ingreso Agencia</TableHead>}
                   <TableHead className="text-right">Saldo</TableHead>
-                  <TableHead>Estado</TableHead>
-                  {isAdmin && <TableHead className="text-right">Acciones</TableHead>}
+                   <TableHead>Estado</TableHead>
+                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   Array.from({ length: 4 }).map((_, i) => (
                     <TableRow key={i}>
-                      {Array.from({ length: isAdmin ? 9 : 6 }).map((_, j) => (
+                      {Array.from({ length: isAdmin ? 9 : 7 }).map((_, j) => (
                         <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                       ))}
                     </TableRow>
                   ))
                 ) : ventas.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 9 : 6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={isAdmin ? 9 : 7} className="text-center py-8 text-muted-foreground">
                       No hay reservas registradas
                     </TableCell>
                   </TableRow>
@@ -286,13 +288,18 @@ export default function Ventas() {
                           {v.estado_pago_cliente ?? "Pendiente"}
                         </Badge>
                       </TableCell>
-                      {isAdmin && (
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(v.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
+                      <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => setDetailVenta(v)} title="Ver detalles">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            {isAdmin && (
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(v.id)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
-                      )}
                     </TableRow>
                   ))
                 )}
@@ -301,6 +308,13 @@ export default function Ventas() {
           </div>
         </CardContent>
       </Card>
+
+      <VentaDetailSheet
+        venta={detailVenta}
+        open={!!detailVenta}
+        onOpenChange={(o) => { if (!o) setDetailVenta(null); }}
+        isAdmin={isAdmin}
+      />
     </div>
   );
 }
