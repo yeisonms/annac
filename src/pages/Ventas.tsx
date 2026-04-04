@@ -62,6 +62,7 @@ export default function Ventas() {
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [detailVenta, setDetailVenta] = useState<VentaRow | null>(null);
 
   const ingreso = form.valor_total_venta - form.costo_por_proveedor;
 
