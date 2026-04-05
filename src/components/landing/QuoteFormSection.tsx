@@ -62,7 +62,7 @@ export function QuoteFormSection() {
         destino: selectedDestino,
         fecha_ida: fechaIda,
         fecha_regreso: fechaRegreso,
-        personas: parseInt(personas, 10),
+        numero_personas: parseInt(personas, 10),
       });
 
       if (error) throw error;
