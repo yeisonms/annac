@@ -30,6 +30,16 @@ export const isInsideIframe = () => {
 export const navigateTopLevel = (url: string) => {
   if (typeof window === "undefined") return;
 
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.target = "_top";
+  anchor.rel = "noopener noreferrer";
+  anchor.style.display = "none";
+
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+
   try {
     if (window.top) {
       window.top.location.href = url;

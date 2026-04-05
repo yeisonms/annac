@@ -14,6 +14,7 @@ import {
   buildQuoteWhatsAppMessage,
   buildWhatsAppUrl,
   isInsideIframe,
+  navigateTopLevel,
   openExternalLink,
   saveQuoteRedirectPayload,
 } from "@/lib/whatsapp";
@@ -72,7 +73,7 @@ export function QuoteFormSection() {
 
     if (isInsideIframe()) {
       saveQuoteRedirectPayload(payload);
-      window.location.href = buildInternalUrl(QUOTE_REDIRECT_PATH);
+      navigateTopLevel(buildInternalUrl(QUOTE_REDIRECT_PATH));
       return;
     }
 
