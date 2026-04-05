@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+import { buildWhatsAppUrl, openExternalLink, openPendingExternalTab } from "@/lib/whatsapp";
 
 const destinos = [
   "Colombia",
@@ -52,6 +52,8 @@ export function QuoteFormSection() {
       return;
     }
 
+    const pendingWhatsappTab = openPendingExternalTab();
+
     setLoading(true);
 
     try {
@@ -67,13 +69,11 @@ export function QuoteFormSection() {
 
       if (error) throw error;
 
-      // Build WhatsApp message
       const mensaje = `Hola Annac Viajes, mi nombre es ${nombre.trim()}. Me gustaría cotizar un viaje a ${selectedDestino} para ${personas} personas, del ${fechaIda} al ${fechaRegreso}. Mi correo es ${email.trim()}.`;
-      const waUrl = `https://wa.me/573027050952?text=${encodeURIComponent(mensaje)}`;
+      const waUrl = buildWhatsAppUrl(mensaje);
 
       toast.success("¡Solicitud enviada! Redirigiendo a WhatsApp...");
 
-      // Reset form
       setNombre("");
       setEmail("");
       setTelefono("");
@@ -82,11 +82,16 @@ export function QuoteFormSection() {
       setFechaRegreso("");
       setPersonas("");
 
-      // Redirect to WhatsApp after a brief delay
-      setTimeout(() => {
-        window.open(waUrl, "_blank");
-      }, 800);
+      if (pendingWhatsappTab && !pendingWhatsappTab.closed) {
+        pendingWhatsappTab.location.replace(waUrl);
+      } else {
+        openExternalLink(waUrl);
+      }
     } catch (err: any) {
+      if (pendingWhatsappTab && !pendingWhatsappTab.closed) {
+        pendingWhatsappTab.close();
+      }
+
       console.error("Error al enviar cotización:", err);
       toast.error("Error al enviar la solicitud. Intenta de nuevo.");
     } finally {
