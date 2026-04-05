@@ -14,6 +14,7 @@ import Historial from "@/pages/Historial";
 import LandingPage from "@/pages/LandingPage";
 import DestinationDetail from "@/pages/DestinationDetail";
 import Login from "@/pages/Login";
+import QuoteRedirect from "@/pages/QuoteRedirect";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
@@ -51,6 +52,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/cotizacion/whatsapp" element={<QuoteRedirect />} />
       <Route path="/destinos/:slug" element={<DestinationDetail />} />
       <Route
         path="/login"

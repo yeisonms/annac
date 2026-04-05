@@ -8,7 +8,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { buildWhatsAppUrl, openExternalLink, openPendingExternalTab } from "@/lib/whatsapp";
+import {
+  QUOTE_REDIRECT_PATH,
+  buildInternalUrl,
+  buildQuoteWhatsAppMessage,
+  buildWhatsAppUrl,
+  isInsideIframe,
+  navigateTopLevel,
+  openExternalLink,
+  saveQuoteRedirectPayload,
+} from "@/lib/whatsapp";
 
 const destinos = [
   "Colombia",
@@ -52,25 +61,38 @@ export function QuoteFormSection() {
       return;
     }
 
-    const pendingWhatsappTab = openPendingExternalTab();
+    const payload = {
+      nombre: nombre.trim(),
+      email: email.trim(),
+      telefono: telefono.trim(),
+      destino: selectedDestino,
+      fechaIda,
+      fechaRegreso,
+      numeroPersonas: parseInt(personas, 10),
+    };
+
+    if (isInsideIframe()) {
+      saveQuoteRedirectPayload(payload);
+      navigateTopLevel(buildInternalUrl(QUOTE_REDIRECT_PATH));
+      return;
+    }
 
     setLoading(true);
 
     try {
       const { error } = await supabase.from("cotizaciones").insert({
-        nombre: nombre.trim(),
-        email: email.trim(),
-        telefono: telefono.trim(),
-        destino: selectedDestino,
-        fecha_ida: fechaIda,
-        fecha_regreso: fechaRegreso,
-        numero_personas: parseInt(personas, 10),
+        nombre: payload.nombre,
+        email: payload.email,
+        telefono: payload.telefono,
+        destino: payload.destino,
+        fecha_ida: payload.fechaIda,
+        fecha_regreso: payload.fechaRegreso,
+        numero_personas: payload.numeroPersonas,
       });
 
       if (error) throw error;
 
-      const mensaje = `Hola Annac Viajes, mi nombre es ${nombre.trim()}. Me gustaría cotizar un viaje a ${selectedDestino} para ${personas} personas, del ${fechaIda} al ${fechaRegreso}. Mi correo es ${email.trim()}.`;
-      const waUrl = buildWhatsAppUrl(mensaje);
+      const waUrl = buildWhatsAppUrl(buildQuoteWhatsAppMessage(payload));
 
       toast.success("¡Solicitud enviada! Redirigiendo a WhatsApp...");
 
@@ -82,16 +104,8 @@ export function QuoteFormSection() {
       setFechaRegreso("");
       setPersonas("");
 
-      if (pendingWhatsappTab && !pendingWhatsappTab.closed) {
-        pendingWhatsappTab.location.replace(waUrl);
-      } else {
-        openExternalLink(waUrl);
-      }
+      openExternalLink(waUrl);
     } catch (err: any) {
-      if (pendingWhatsappTab && !pendingWhatsappTab.closed) {
-        pendingWhatsappTab.close();
-      }
-
       console.error("Error al enviar cotización:", err);
       toast.error("Error al enviar la solicitud. Intenta de nuevo.");
     } finally {
