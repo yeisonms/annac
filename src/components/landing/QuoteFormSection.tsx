@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Send } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
 const destinos = [
   "Colombia",
@@ -22,18 +24,21 @@ export function QuoteFormSection() {
   const [loading, setLoading] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedDestino, setSelectedDestino] = useState<string>("");
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [fechaIda, setFechaIda] = useState("");
+  const [fechaRegreso, setFechaRegreso] = useState("");
+  const [personas, setPersonas] = useState("");
 
   useEffect(() => {
     const destino = searchParams.get("destino");
     if (destino) {
-      // Check if it matches a known category, otherwise use "Otro"
       const match = destinos.find((d) => d.toLowerCase() === destino.toLowerCase());
       setSelectedDestino(match || "Otro");
-      // Scroll to the form
       setTimeout(() => {
         document.getElementById("cotizar")?.scrollIntoView({ behavior: "smooth" });
       }, 300);
-      // Clean up the URL param
       searchParams.delete("destino");
       setSearchParams(searchParams, { replace: true });
     }
@@ -41,15 +46,52 @@ export function QuoteFormSection() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!selectedDestino) {
+      toast.error("Por favor selecciona un destino.");
+      return;
+    }
+
     setLoading(true);
-    // Simulate submission
-    await new Promise((r) => setTimeout(r, 1500));
-    setLoading(false);
-    toast({
-      title: "¡Solicitud enviada!",
-      description: "Nos pondremos en contacto contigo muy pronto.",
-    });
-    (e.target as HTMLFormElement).reset();
+
+    try {
+      const { error } = await supabase.from("cotizaciones").insert({
+        nombre: nombre.trim(),
+        email: email.trim(),
+        telefono: telefono.trim(),
+        destino: selectedDestino,
+        fecha_ida: fechaIda,
+        fecha_regreso: fechaRegreso,
+        personas: parseInt(personas, 10),
+      });
+
+      if (error) throw error;
+
+      // Build WhatsApp message
+      const mensaje = `Hola Annac Viajes, mi nombre es ${nombre.trim()}. Me gustaría cotizar un viaje a ${selectedDestino} para ${personas} personas, del ${fechaIda} al ${fechaRegreso}. Mi correo es ${email.trim()}.`;
+      const waUrl = `https://wa.me/573027050952?text=${encodeURIComponent(mensaje)}`;
+
+      toast.success("¡Solicitud enviada! Redirigiendo a WhatsApp...");
+
+      // Reset form
+      setNombre("");
+      setEmail("");
+      setTelefono("");
+      setSelectedDestino("");
+      setFechaIda("");
+      setFechaRegreso("");
+      setPersonas("");
+
+      // Redirect to WhatsApp after a brief delay
+      setTimeout(() => {
+        window.open(waUrl, "_blank");
+      }, 800);
+    } catch (err: any) {
+      console.error("Error al enviar cotización:", err);
+      toast.error("Error al enviar la solicitud. Intenta de nuevo.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -74,18 +116,18 @@ export function QuoteFormSection() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="nombre">Nombre y apellido *</Label>
-                  <Input id="nombre" placeholder="Juan Pérez" required />
+                  <Input id="nombre" placeholder="Juan Pérez" required value={nombre} onChange={(e) => setNombre(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email *</Label>
-                  <Input id="email" type="email" placeholder="juan@email.com" required />
+                  <Input id="email" type="email" placeholder="juan@email.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="telefono">Teléfono *</Label>
-                  <Input id="telefono" type="tel" placeholder="+57 300 123 4567" required />
+                  <Input id="telefono" type="tel" placeholder="+57 300 123 4567" required value={telefono} onChange={(e) => setTelefono(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="destino">Destino *</Label>
@@ -105,15 +147,15 @@ export function QuoteFormSection() {
               <div className="grid sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="fecha_ida">Fecha de ida *</Label>
-                  <Input id="fecha_ida" type="date" required />
+                  <Input id="fecha_ida" type="date" required value={fechaIda} onChange={(e) => setFechaIda(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="fecha_regreso">Fecha de regreso *</Label>
-                  <Input id="fecha_regreso" type="date" required />
+                  <Input id="fecha_regreso" type="date" required value={fechaRegreso} onChange={(e) => setFechaRegreso(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="personas">N° de personas *</Label>
-                  <Input id="personas" type="number" min={1} placeholder="2" required />
+                  <Input id="personas" type="number" min={1} placeholder="2" required value={personas} onChange={(e) => setPersonas(e.target.value)} />
                 </div>
               </div>
 
@@ -124,7 +166,10 @@ export function QuoteFormSection() {
                 className="w-full bg-coral hover:bg-coral/90 text-coral-foreground rounded-xl py-6 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 {loading ? (
-                  "Enviando..."
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Enviando...
+                  </>
                 ) : (
                   <>
                     <Send className="h-5 w-5 mr-2" />
