@@ -7,7 +7,7 @@ import { SocialProofSection } from "@/components/landing/SocialProofSection";
 import { QuoteFormSection } from "@/components/landing/QuoteFormSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { PaymentMethodsSection } from "@/components/landing/PaymentMethodsSection";
-import { buildWhatsAppUrl, openExternalLink } from "@/lib/whatsapp";
+import { buildWhatsAppUrl, openWhatsAppLink } from "@/lib/whatsapp";
 
 const LandingPage = () => {
   return (
@@ -25,13 +25,13 @@ const LandingPage = () => {
       {/* Floating WhatsApp Button */}
       <a
         href={buildWhatsAppUrl()}
-        target="_blank"
+        target="_top"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-16 h-16 rounded-full bg-[hsl(142,71%,45%)] hover:bg-[hsl(142,71%,38%)] text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
         aria-label="Contactar por WhatsApp"
         onClick={(event) => {
           event.preventDefault();
-          openExternalLink(buildWhatsAppUrl());
+          openWhatsAppLink();
         }}
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8">
