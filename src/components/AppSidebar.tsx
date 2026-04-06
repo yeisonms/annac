@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Plane, Wallet, Building2, History } from "lucide-react";
+import { LayoutDashboard, Users, Plane, Wallet, Building2, History, FileText } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
