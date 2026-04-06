@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { WHATSAPP_NUMBER } from "@/lib/whatsapp";
+
 
 interface Cotizacion {
   id: string;
