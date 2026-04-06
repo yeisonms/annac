@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Check, MessageCircle, Loader2, FileText } from "lucide-react";
+import { Check, MessageCircle, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 interface Cotizacion {
@@ -51,6 +52,7 @@ const Cotizaciones = () => {
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { isAdmin } = useAuth();
 
   const fetchCotizaciones = async () => {
     setLoading(true);
@@ -171,7 +173,7 @@ const Cotizaciones = () => {
                     <TableCell>{estadoBadge(c.estado)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {c.estado === "nuevo" && (
+                        {isAdmin && c.estado === "nuevo" && (
                           <Button
                             size="sm"
                             variant="outline"
