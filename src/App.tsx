@@ -15,6 +15,7 @@ import LandingPage from "@/pages/LandingPage";
 import DestinationDetail from "@/pages/DestinationDetail";
 import Login from "@/pages/Login";
 import QuoteRedirect from "@/pages/QuoteRedirect";
+import Cotizaciones from "@/pages/Cotizaciones";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
@@ -69,6 +70,7 @@ function AppRoutes() {
                 <Route path="ventas" element={<Ventas />} />
                 <Route path="cartera" element={<Cartera />} />
                 <Route path="proveedores" element={<Proveedores />} />
+                <Route path="cotizaciones" element={<Cotizaciones />} />
                 <Route path="historial" element={<Historial />} />
               </Routes>
             </AppLayout>
