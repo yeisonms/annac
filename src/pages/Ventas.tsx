@@ -49,9 +49,10 @@ const emptyForm = {
   codigo_reserva_hotel: "",
   receptivos_programa: "",
   valor_total_venta: 0,
+  anticipo: 0,
+  metodo_pago_anticipo: "Transferencia",
   costo_por_proveedor: 0,
   plazo_pago_cliente: "",
-  estado_pago_cliente: "PENDIENTE",
 };
 
 export default function Ventas() {
@@ -101,7 +102,10 @@ export default function Ventas() {
     }
     setSaving(true);
 
-    const payload = {
+    const saldoCalculado = form.valor_total_venta - form.anticipo;
+    const estadoPago = saldoCalculado <= 0 ? "COMPLETO" : "PENDIENTE";
+
+    const payloadVenta = {
       cliente_id: form.cliente_id,
       destino: form.destino,
       fecha_venta: form.fecha_venta || null,
@@ -112,21 +116,46 @@ export default function Ventas() {
       receptivos_programa: form.receptivos_programa || null,
       valor_total_venta: form.valor_total_venta,
       costo_por_proveedor: form.costo_por_proveedor,
-      saldo_cliente: form.valor_total_venta,
-      estado_pago_cliente: form.estado_pago_cliente,
+      saldo_cliente: saldoCalculado,
+      estado_pago_cliente: estadoPago,
       plazo_pago_cliente: form.plazo_pago_cliente || null,
     };
 
-    const { error } = await supabase.from("ventas").insert(payload);
+    // Paso A: Crear la Venta
+    const { data: nuevaVenta, error: errorVenta } = await supabase
+      .from("ventas")
+      .insert(payloadVenta)
+      .select("id")
+      .single();
 
-    if (error) {
-      toast.error("Error al guardar: " + error.message);
-    } else {
-      toast.success("Reserva registrada exitosamente");
-      setForm(emptyForm);
-      setOpen(false);
-      fetchVentas();
+    if (errorVenta) {
+      toast.error("Error al crear la venta: " + errorVenta.message);
+      setSaving(false);
+      return;
     }
+
+    // Paso B: Registrar el Anticipo en Cartera
+    const payloadPago = {
+      venta_id: nuevaVenta.id,
+      monto_abonado: form.anticipo,
+      metodo_pago: form.metodo_pago_anticipo,
+      fecha_pago: new Date().toISOString().split("T")[0],
+    };
+
+    const { error: errorPago } = await supabase
+      .from("pagos_clientes")
+      .insert(payloadPago);
+
+    if (errorPago) {
+      toast.error("Venta creada, pero error al registrar el anticipo: " + errorPago.message);
+      setSaving(false);
+      return;
+    }
+
+    toast.success("Venta y Anticipo registrados exitosamente");
+    setForm(emptyForm);
+    setOpen(false);
+    fetchVentas();
     setSaving(false);
   };
 
@@ -198,6 +227,26 @@ export default function Ventas() {
                 <Label>Valor Total Venta</Label>
                 <Input type="number" value={form.valor_total_venta || ""} onChange={(e) => setForm((p) => ({ ...p, valor_total_venta: Number(e.target.value) }))} />
               </div>
+              <div className="grid gap-1.5">
+                <Label>Anticipo (Primer Abono) *</Label>
+                <Input type="number" value={form.anticipo || ""} onChange={(e) => setForm((p) => ({ ...p, anticipo: Number(e.target.value) }))} min={0} required />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Método de Pago del Anticipo</Label>
+                <Select value={form.metodo_pago_anticipo} onValueChange={(v) => setForm((p) => ({ ...p, metodo_pago_anticipo: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Efectivo">Efectivo</SelectItem>
+                    <SelectItem value="Transferencia">Transferencia</SelectItem>
+                    <SelectItem value="Tarjeta de Crédito">Tarjeta de Crédito</SelectItem>
+                    <SelectItem value="Tarjeta de Débito">Tarjeta de Débito</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Saldo (Calculado)</Label>
+                <Input value={formatCurrency(Math.max(0, form.valor_total_venta - form.anticipo))} readOnly className="bg-muted font-semibold text-danger" />
+              </div>
               {isAdmin && (
                 <>
                   <div className="grid gap-1.5">
@@ -206,23 +255,13 @@ export default function Ventas() {
                   </div>
                   <div className="grid gap-1.5">
                     <Label>Ingreso Agencia (proyectado)</Label>
-                    <Input value={formatCurrency(ingreso >= 0 ? ingreso : 0)} readOnly className="bg-muted font-semibold" />
+                    <Input value={formatCurrency(ingreso >= 0 ? ingreso : 0)} readOnly className="bg-muted font-semibold text-success" />
                   </div>
                 </>
               )}
               <div className="grid gap-1.5">
-                <Label>Plazo Pago Cliente</Label>
+                <Label>Plazo Pago Cliente (para el saldo restante)</Label>
                 <Input type="date" value={form.plazo_pago_cliente} onChange={(e) => setForm((p) => ({ ...p, plazo_pago_cliente: e.target.value }))} />
-              </div>
-              <div className="grid gap-1.5">
-                <Label>Estado Pago</Label>
-                <Select value={form.estado_pago_cliente} onValueChange={(v) => setForm((p) => ({ ...p, estado_pago_cliente: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="PENDIENTE">Pendiente</SelectItem>
-                    <SelectItem value="COMPLETO">Completo</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
             <DialogFooter>

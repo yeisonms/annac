@@ -5,6 +5,7 @@ export interface Cliente {
   fecha_nacimiento: string;
   correo: string;
   celular: string;
+  direccion?: string;
 }
 
 export interface Proveedor {

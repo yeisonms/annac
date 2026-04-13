@@ -17,9 +17,10 @@ interface Cliente {
   fecha_nacimiento: string | null;
   correo: string | null;
   celular: string | null;
+  direccion: string | null;
 }
 
-const emptyForm = { nombre_cliente: "", cedula: "", fecha_nacimiento: "", correo: "", celular: "" };
+const emptyForm = { nombre_cliente: "", cedula: "", fecha_nacimiento: "", correo: "", celular: "", direccion: "" };
 
 export default function Clientes() {
   const { isAdmin } = useAuth();
@@ -62,6 +63,7 @@ export default function Clientes() {
       fecha_nacimiento: c.fecha_nacimiento ?? "",
       correo: c.correo ?? "",
       celular: c.celular ?? "",
+      direccion: c.direccion ?? "",
     });
     setOpen(true);
   };
@@ -78,6 +80,7 @@ export default function Clientes() {
       fecha_nacimiento: form.fecha_nacimiento || null,
       correo: form.correo || null,
       celular: form.celular || null,
+      direccion: form.direccion || null,
     };
 
     if (editing) {
@@ -122,6 +125,7 @@ export default function Clientes() {
                   { key: "fecha_nacimiento", label: "Fecha de Nacimiento", type: "date" },
                   { key: "correo", label: "Correo Electrónico", type: "email" },
                   { key: "celular", label: "Celular", type: "text" },
+                  { key: "direccion", label: "Dirección", type: "text" },
                 ].map((f) => (
                   <div key={f.key} className="grid gap-1.5">
                     <Label>{f.label}</Label>
@@ -159,6 +163,7 @@ export default function Clientes() {
                     <TableHead>Cédula</TableHead>
                     <TableHead>Correo</TableHead>
                     <TableHead>Celular</TableHead>
+                    <TableHead>Dirección</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -176,6 +181,7 @@ export default function Clientes() {
                         <TableCell>{c.cedula}</TableCell>
                         <TableCell>{c.correo ?? "—"}</TableCell>
                         <TableCell>{c.celular ?? "—"}</TableCell>
+                        <TableCell>{c.direccion ?? "—"}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => openEdit(c)}>
                             <Pencil className="h-4 w-4" />
