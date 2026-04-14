@@ -9,7 +9,7 @@ export const destinationCategories: DestinationCategory[] = [
   {
     slug: "colombia",
     name: "Colombia",
-    img: "https://images.unsplash.com/photo-1583997052103-b4a1cb974ce5?w=600&h=400&fit=crop",
+    img: "https://images.unsplash.com/photo-1558281050-0c46927914bf?w=1920&h=800&fit=crop&q=80",
     destinations: [
       "Cartagena", "Santa Marta", "San Andrés", "Eje Cafetero", "Huila",
       "Medellín", "Amazonas", "Coveñas", "Cali", "La Guajira", "Pacífico Colombiano",

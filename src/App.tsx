@@ -11,6 +11,7 @@ import Ventas from "@/pages/Ventas";
 import Cartera from "@/pages/Cartera";
 import Proveedores from "@/pages/Proveedores";
 import Historial from "@/pages/Historial";
+import Reels from "@/pages/Reels";
 import LandingPage from "@/pages/LandingPage";
 import DestinationDetail from "@/pages/DestinationDetail";
 import Login from "@/pages/Login";
@@ -71,6 +72,7 @@ function AppRoutes() {
                 <Route path="cartera" element={<Cartera />} />
                 <Route path="proveedores" element={<Proveedores />} />
                 <Route path="cotizaciones" element={<Cotizaciones />} />
+                <Route path="reels" element={isAdmin ? <Reels /> : <Navigate to="/admin" replace />} />
                 <Route path="historial" element={<Historial />} />
               </Routes>
             </AppLayout>

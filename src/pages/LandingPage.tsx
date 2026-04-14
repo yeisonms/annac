@@ -5,6 +5,7 @@ import { DestinationsSection } from "@/components/landing/DestinationsSection";
 import { AboutSection } from "@/components/landing/AboutSection";
 import { SocialProofSection } from "@/components/landing/SocialProofSection";
 import { QuoteFormSection } from "@/components/landing/QuoteFormSection";
+import { SocialFeedSection } from "@/components/landing/SocialFeedSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { PaymentMethodsSection } from "@/components/landing/PaymentMethodsSection";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
@@ -20,6 +21,7 @@ const LandingPage = () => {
       <SocialProofSection />
       <QuoteFormSection />
       <PaymentMethodsSection />
+      <SocialFeedSection />
       <LandingFooter />
 
       {/* Floating WhatsApp Button */}

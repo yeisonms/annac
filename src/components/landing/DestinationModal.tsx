@@ -8,11 +8,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plane } from "lucide-react";
 
-// Map of destination names to Unsplash images
 const destinationImages: Record<string, string> = {
+  // Colombia
   "Cartagena": "https://images.unsplash.com/photo-1583997052103-b4a1cb974ce5?w=800&h=400&fit=crop",
   "Santa Marta": "https://images.unsplash.com/photo-1624811072711-4fe765954e63?w=800&h=400&fit=crop",
   "San Andrés": "https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?w=800&h=400&fit=crop",
+  "Eje Cafetero": "https://images.unsplash.com/photo-1616089338274-1dccefacd0a1?w=800&h=400&fit=crop",
+  "Huila": "https://images.unsplash.com/photo-1563220556-91e847cbb650?w=800&h=400&fit=crop",
+  "Medellín": "https://images.unsplash.com/photo-1582236940847-a7eb2b6df2d5?w=800&h=400&fit=crop",
+  "Amazonas": "https://images.unsplash.com/photo-1542385151-efd9000785a0?w=800&h=400&fit=crop",
+  "Coveñas": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=400&fit=crop",
+  "Cali": "https://images.unsplash.com/photo-1571261565557-4148b111db0d?w=800&h=400&fit=crop",
+  "La Guajira": "https://images.unsplash.com/photo-1536640581454-e0c1dbfa2642?w=800&h=400&fit=crop",
+  "Pacífico Colombiano": "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?w=800&h=400&fit=crop",
+  
+  // Caribe & Otros
   "Punta Cana": "https://images.unsplash.com/photo-1535916707207-35f97e715e1c?w=800&h=400&fit=crop",
   "Cancún": "https://images.unsplash.com/photo-1510097467424-192d713fd8b2?w=800&h=400&fit=crop",
   "París": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&h=400&fit=crop",
