@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Check, MessageCircle, FileText } from "lucide-react";
+import { MessageCircle, FileText, User, StickyNote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,7 +19,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Cotizacion {
   id: string;
@@ -30,67 +32,119 @@ interface Cotizacion {
   fecha_regreso: string | null;
   numero_personas: number | null;
   estado: string;
+  asignado_a: string | null;
+  notas: string | null;
 }
 
-const estadoBadge = (estado: string) => {
+const ESTADOS = [
+  "Nueva",
+  "Conversación Inicial",
+  "Cotización Realizada",
+  "Esperando Respuesta",
+  "Finalizada",
+  "Rechazada"
+];
+
+const getEstadoColor = (estado: string) => {
   switch (estado) {
-    case "nuevo":
-      return <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100">Nuevo</Badge>;
-    case "atendido":
-    case "contactado":
-      return <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100">Atendido</Badge>;
-    case "vendido":
-      return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100">Vendido</Badge>;
-    case "perdido":
-      return <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-100">Perdido</Badge>;
+    case "Nueva":
+      return "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200";
+    case "Conversación Inicial":
+      return "bg-indigo-100 text-indigo-800 border-indigo-200 hover:bg-indigo-200";
+    case "Cotización Realizada":
+      return "bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200";
+    case "Esperando Respuesta":
+      return "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200";
+    case "Finalizada":
+      return "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200";
+    case "Rechazada":
+      return "bg-red-100 text-red-800 border-red-200 hover:bg-red-200";
     default:
-      return <Badge variant="outline">{estado}</Badge>;
+      return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200";
   }
 };
 
 const Cotizaciones = () => {
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
+  const [perfiles, setPerfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filtroAsignado, setFiltroAsignado] = useState<"todas" | "mis">("todas");
+  const [filtroEstado, setFiltroEstado] = useState<string>("todos");
+  const [notasOpen, setNotasOpen] = useState(false);
+  const [selectedCotizacion, setSelectedCotizacion] = useState<Cotizacion | null>(null);
+  const [notasTemp, setNotasTemp] = useState("");
+  const [savingNotas, setSavingNotas] = useState(false);
+
   const { toast } = useToast();
-  const { isAdmin } = useAuth();
+  const { user } = useAuth();
 
-  const fetchCotizaciones = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
+  const openNotas = (c: Cotizacion) => {
+    setSelectedCotizacion(c);
+    setNotasTemp(c.notas || "");
+    setNotasOpen(true);
+  };
+
+  const saveNotas = async () => {
+    if (!selectedCotizacion) return;
+    setSavingNotas(true);
+    const { error } = await supabase
       .from("cotizaciones")
-      .select("*")
-      .order("created_at", { ascending: false });
-
+      .update({ notas: notasTemp })
+      .eq("id", selectedCotizacion.id);
+      
     if (error) {
+      toast({ title: "Error", description: "No se pudieron guardar las notas.", variant: "destructive" });
+    } else {
+      setCotizaciones((prev) => prev.map((c) => (c.id === selectedCotizacion.id ? { ...c, notas: notasTemp } : c)));
+      toast({ title: "Notas guardadas", description: "Se actualizaron los comentarios." });
+      setNotasOpen(false);
+    }
+    setSavingNotas(false);
+  };
+
+  const fetchCotizacionesAndPerfiles = async () => {
+    setLoading(true);
+    const [resCot, resPerf] = await Promise.all([
+      supabase.from("cotizaciones").select("*").order("created_at", { ascending: false }),
+      supabase.from("perfiles").select("*")
+    ]);
+    
+    if (resCot.error) {
       toast({ title: "Error", description: "No se pudieron cargar las cotizaciones.", variant: "destructive" });
     } else {
-      setCotizaciones(data || []);
+      setCotizaciones(resCot.data || []);
+    }
+    
+    if (!resPerf.error) {
+      setPerfiles(resPerf.data || []);
     }
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchCotizaciones();
+    fetchCotizacionesAndPerfiles();
   }, []);
 
-  const marcarAtendido = async (id: string) => {
-    const { error } = await supabase
-      .from("cotizaciones")
-      .update({ estado: "atendido" })
-      .eq("id", id);
-
+  const updateEstado = async (id: string, nuevoEstado: string) => {
+    const { error } = await supabase.from("cotizaciones").update({ estado: nuevoEstado }).eq("id", id);
     if (error) {
       toast({ title: "Error", description: "No se pudo actualizar el estado.", variant: "destructive" });
-      return;
+    } else {
+      setCotizaciones((prev) => prev.map((c) => (c.id === id ? { ...c, estado: nuevoEstado } : c)));
+      toast({ title: "Actualizado", description: "Estado modificado exitosamente." });
     }
-
-    setCotizaciones((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, estado: "atendido" } : c))
-    );
-    toast({ title: "Actualizado", description: "Cotización marcada como atendida." });
   };
 
-  const nuevasCount = cotizaciones.filter((c) => c.estado === "nuevo").length;
+  const updateAsignado = async (id: string, nuevoAsignado: string) => {
+    const val = nuevoAsignado === "unassigned" ? null : nuevoAsignado;
+    const { error } = await supabase.from("cotizaciones").update({ asignado_a: val }).eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: "No se pudo reasignar.", variant: "destructive" });
+    } else {
+      setCotizaciones((prev) => prev.map((c) => (c.id === id ? { ...c, asignado_a: val } : c)));
+      toast({ title: "Reasignado", description: "La cotización fue asignada." });
+    }
+  };
 
   const formatFecha = (dateStr: string) => {
     try {
@@ -109,107 +163,215 @@ const Cotizaciones = () => {
     }
   };
 
+  const filteredCotizaciones = cotizaciones.filter((c) => {
+    const matchAsignado = filtroAsignado === "mis" ? c.asignado_a === user?.id : true;
+    const matchEstado = filtroEstado === "todos" ? true : c.estado === filtroEstado;
+    return matchAsignado && matchEstado;
+  });
+
+  const nuevasCount = cotizaciones.filter((c) => c.estado === "Nuevas" || c.estado === "nuevo").length;
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Cotizaciones Recientes</h1>
-          <p className="text-muted-foreground text-sm">Leads recibidos desde la landing page</p>
+          <h1 className="text-2xl font-extrabold tracking-tight">CRM de Cotizaciones</h1>
+          <p className="text-muted-foreground text-sm">Gestiona y asigna los leads captados de la landing page.</p>
         </div>
         {nuevasCount > 0 && (
-          <Badge className="bg-amber-500 text-white text-sm px-3 py-1 hover:bg-amber-500">
-            {nuevasCount} nueva{nuevasCount !== 1 ? "s" : ""}
+          <Badge className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-3 py-1.5 text-sm">
+            {nuevasCount} Nueva{nuevasCount !== 1 ? "s" : ""}
           </Badge>
         )}
       </div>
 
-      <Card className="border-border/60 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <FileText className="h-4 w-4 text-muted-foreground" />
-            Todas las cotizaciones
+      <div className="flex flex-col sm:flex-row items-center gap-3 bg-card/60 p-3 rounded-2xl border border-border/50 shadow-sm">
+        <div className="flex items-center gap-2">
+          <Select value={filtroAsignado} onValueChange={(v: "todas" | "mis") => setFiltroAsignado(v)}>
+            <SelectTrigger className="w-[180px] bg-background">
+              <SelectValue placeholder="Filtrar asignación" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas las Cotizaciones</SelectItem>
+              <SelectItem value="mis">Mis Cotizaciones</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={filtroEstado} onValueChange={setFiltroEstado}>
+            <SelectTrigger className="w-[180px] bg-background">
+              <SelectValue placeholder="Estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos los Estados</SelectItem>
+              {ESTADOS.map((e) => (
+                <SelectItem key={e} value={e}>{e}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <Card className="border-none shadow-md bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+        <CardHeader className="pb-3 border-b border-border/40">
+          <CardTitle className="flex items-center gap-2 text-base font-bold">
+            <FileText className="h-5 w-5 text-primary" />
+            Registro de Leads
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
             <div className="p-6 space-y-4">
               {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-14 w-full" />
+                <Skeleton key={i} className="h-16 w-full rounded-xl" />
               ))}
             </div>
-          ) : cotizaciones.length === 0 ? (
-            <div className="p-10 text-center text-muted-foreground">
-              No hay cotizaciones aún.
+          ) : filteredCotizaciones.length === 0 ? (
+            <div className="p-16 text-center text-muted-foreground flex flex-col items-center gap-2">
+              <FileText className="h-8 w-8 text-muted-foreground/40" />
+              <p>No se encontraron cotizaciones con los filtros actuales.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Detalles del Viaje</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {cotizaciones.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="whitespace-nowrap font-medium">
-                      {formatFecha(c.created_at)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">{c.nombre}</div>
-                      <div className="text-sm text-muted-foreground">{c.email}</div>
-                      <div className="text-sm text-muted-foreground">{c.telefono}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">{c.destino}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {formatFechaCorta(c.fecha_ida)} → {formatFechaCorta(c.fecha_regreso)}
-                        {c.numero_personas && ` · ${c.numero_personas} pax`}
-                      </div>
-                    </TableCell>
-                    <TableCell>{estadoBadge(c.estado)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {isAdmin && c.estado === "nuevo" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => marcarAtendido(c.id)}
-                            className="gap-1.5"
-                          >
-                            <Check className="h-3.5 w-3.5" />
-                            Atendido
-                          </Button>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Viaje</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Asignado A</TableHead>
+                    <TableHead className="text-right">Contacto</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCotizaciones.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell className="whitespace-nowrap font-medium text-muted-foreground">
+                        {formatFecha(c.created_at)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-bold text-foreground">{c.nombre}</div>
+                        <div className="text-sm text-muted-foreground">{c.email}</div>
+                        <div className="text-sm text-muted-foreground">{c.telefono}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-semibold">{c.destino}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {formatFechaCorta(c.fecha_ida)} → {formatFechaCorta(c.fecha_regreso)}
+                        </div>
+                        {c.numero_personas && (
+                          <Badge variant="secondary" className="mt-1 text-[10px]">
+                            {c.numero_personas} Pax
+                          </Badge>
                         )}
-                        {c.telefono && (
+                      </TableCell>
+                      <TableCell>
+                        <Select value={ESTADOS.includes(c.estado) ? c.estado : (c.estado === 'nuevo' || c.estado === 'Nuevo' ? "Nueva" : "Conversación Inicial")} onValueChange={(val) => updateEstado(c.id, val)}>
+                          <SelectTrigger className={`h-8 w-[190px] rounded-full font-semibold border transition-colors ${getEstadoColor(c.estado === 'nuevo' || c.estado === 'Nuevo' ? 'Nueva' : c.estado)}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ESTADOS.map((e) => (
+                              <SelectItem key={e} value={e}>
+                                <div className="flex items-center gap-2">
+                                  <div className={`h-2 w-2 rounded-full ${getEstadoColor(e).split(' ')[0].replace('bg-', 'bg-').replace('-100', '-500')}`} />
+                                  {e}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Select value={c.asignado_a || "unassigned"} onValueChange={(val) => updateAsignado(c.id, val)}>
+                          <SelectTrigger className="h-8 w-[180px] bg-background">
+                            <SelectValue placeholder="Sin Asignar" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="unassigned" className="text-muted-foreground italic">Sin Asignar</SelectItem>
+                            {perfiles.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                <div className="flex items-center gap-2">
+                                  <User className="h-3 w-3 text-muted-foreground" />
+                                  {p.nombre || p.nombre_completo || p.full_name || p.email || p.correo || `Asesor (${p.id.substring(0, 4)})`}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
                           <Button
-                            size="sm"
+                            size="icon"
                             variant="ghost"
-                            className="gap-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                            className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-100 rounded-full bg-amber-50 shadow-sm"
+                            onClick={() => openNotas(c)}
+                            title="Ver / Editar Notas"
+                          >
+                            <StickyNote className="h-4 w-4" />
+                          </Button>
+                          {c.telefono && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 rounded-full bg-emerald-50 shadow-sm"
                             asChild
                           >
                             <a
                               href={`https://wa.me/${c.telefono.replace(/\D/g, "")}`}
                               target="_blank"
                               rel="noopener noreferrer"
+                              title="Mensaje por WhatsApp"
                             >
-                              <MessageCircle className="h-3.5 w-3.5" />
-                              WhatsApp
+                              <MessageCircle className="h-4 w-4" />
                             </a>
                           </Button>
                         )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={notasOpen} onOpenChange={setNotasOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <StickyNote className="h-5 w-5 text-amber-600" />
+              Notas / Comentarios
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            {selectedCotizacion && (
+              <div className="text-sm bg-muted/60 p-3 rounded-lg border border-border/50 shadow-inner">
+                <p><span className="font-semibold text-foreground">Cliente:</span> {selectedCotizacion.nombre}</p>
+                <p className="mt-1"><span className="font-semibold text-foreground">Viaje:</span> {selectedCotizacion.destino}</p>
+              </div>
+            )}
+            <div className="flex flex-col gap-2">
+              <Textarea
+                value={notasTemp}
+                onChange={(e) => setNotasTemp(e.target.value)}
+                placeholder="No hay comentarios registrados..."
+                className="min-h-[150px] resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setNotasOpen(false)}>Cancelar</Button>
+            <Button onClick={saveNotas} disabled={savingNotas} className="bg-amber-600 hover:bg-amber-700 text-white">
+              Guardar Notas
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
