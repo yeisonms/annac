@@ -13,6 +13,8 @@ import Proveedores from "@/pages/Proveedores";
 import Historial from "@/pages/Historial";
 import Reels from "@/pages/Reels";
 import LandingPage from "@/pages/LandingPage";
+import CasosExito from "@/pages/CasosExito";
+import CasosExitoAdmin from "@/pages/CasosExitoAdmin";
 import DestinationDetail from "@/pages/DestinationDetail";
 import Login from "@/pages/Login";
 import QuoteRedirect from "@/pages/QuoteRedirect";
@@ -54,6 +56,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/casos-exito" element={<CasosExito />} />
       <Route path="/cotizacion/whatsapp" element={<QuoteRedirect />} />
       <Route path="/destinos/:slug" element={<DestinationDetail />} />
       <Route
@@ -73,6 +76,7 @@ function AppRoutes() {
                 <Route path="proveedores" element={<Proveedores />} />
                 <Route path="cotizaciones" element={<Cotizaciones />} />
                 <Route path="reels" element={isAdmin ? <Reels /> : <Navigate to="/admin" replace />} />
+                <Route path="casos-admin" element={isAdmin ? <CasosExitoAdmin /> : <Navigate to="/admin" replace />} />
                 <Route path="historial" element={<Historial />} />
               </Routes>
             </AppLayout>

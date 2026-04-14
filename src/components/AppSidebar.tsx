@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Plane, Wallet, Building2, History, FileText, Instagram } from "lucide-react";
+import { LayoutDashboard, Users, Plane, Wallet, Building2, History, FileText, Instagram, Star } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,6 +28,7 @@ export function AppSidebar() {
     { title: "Proveedores", url: "/admin/proveedores", icon: Building2 },
     { title: "Cotizaciones", url: "/admin/cotizaciones", icon: FileText },
     ...(isAdmin ? [{ title: "Redes (Reels)", url: "/admin/reels", icon: Instagram }] : []),
+    ...(isAdmin ? [{ title: "Casos de Éxito", url: "/admin/casos-admin", icon: Star }] : []),
     ...(isAdmin ? [{ title: "Historial", url: "/admin/historial", icon: History }] : []),
   ];
 
