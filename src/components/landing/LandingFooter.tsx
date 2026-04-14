@@ -41,15 +41,15 @@ export function LandingFooter() {
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-sm text-white/60">
                 <Mail className="h-4 w-4 text-white/40" />
-                info@annacviajes.com
+                annacviajesatumedida@gmail.com
               </li>
               <li className="flex items-center gap-2 text-sm text-white/60">
                 <Phone className="h-4 w-4 text-white/40" />
-                +57 300 123 4567
+                +57 302 7050952
               </li>
               <li className="flex items-center gap-2 text-sm text-white/60">
                 <Instagram className="h-4 w-4 text-white/40" />
-                @annacviajes
+                @annac_viajesatumedida
               </li>
             </ul>
           </div>

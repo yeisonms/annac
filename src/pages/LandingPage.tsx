@@ -19,11 +19,11 @@ const LandingPage = () => {
       <ServicesSection />
       <DestinationsSection />
       <AboutSection />
-      <SocialProofSection />
+      {/* <SocialProofSection /> */}
       <QuoteFormSection />
       <PaymentMethodsSection />
-      <LatestBlogsSection />
       <SocialFeedSection />
+      <LatestBlogsSection />
       <LandingFooter />
 
       {/* Floating WhatsApp Button */}
