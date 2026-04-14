@@ -15,8 +15,12 @@ export function LandingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-md border-b border-border shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="fixed top-0 left-0 right-0 z-[60]">
+      <div className="bg-slate-900 py-2 px-4 text-center text-sm font-medium text-white shadow-sm tracking-wide">
+        Más de 10 años de experiencia en turismo
+      </div>
+      <nav className="bg-card/90 backdrop-blur-md border-b border-border shadow-sm transition-colors">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <a href="/#inicio" className="flex items-center gap-2 shrink-0">
@@ -76,6 +80,7 @@ export function LandingNavbar() {
           </div>
         </div>
       )}
-    </nav>
+      </nav>
+    </div>
   );
 }
