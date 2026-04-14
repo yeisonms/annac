@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { MessageCircle, FileText, User, StickyNote } from "lucide-react";
+import { MessageCircle, FileText, User, StickyNote, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -75,6 +77,21 @@ const Cotizaciones = () => {
   const [notasTemp, setNotasTemp] = useState("");
   const [savingNotas, setSavingNotas] = useState(false);
 
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    nombre: "",
+    email: "",
+    telefono: "",
+    destino: "",
+    fecha_ida: "",
+    fecha_regreso: "",
+    numero_personas: "",
+    estado: "Nueva",
+    asignado_a: "unassigned",
+    notas: "",
+  });
+  const [creating, setCreating] = useState(false);
+
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -100,6 +117,37 @@ const Cotizaciones = () => {
       setNotasOpen(false);
     }
     setSavingNotas(false);
+  };
+
+  const handleCreate = async () => {
+    if (!createForm.nombre || !createForm.destino) {
+      toast({ title: "Campos requeridos", description: "Nombre y destino son obligatorios.", variant: "destructive" });
+      return;
+    }
+    setCreating(true);
+    const payload = {
+      nombre: createForm.nombre,
+      email: createForm.email || "No especificado",
+      telefono: createForm.telefono || "",
+      destino: createForm.destino,
+      fecha_ida: createForm.fecha_ida || null,
+      fecha_regreso: createForm.fecha_regreso || null,
+      numero_personas: createForm.numero_personas ? Number(createForm.numero_personas) : null,
+      estado: createForm.estado,
+      asignado_a: createForm.asignado_a === "unassigned" ? null : createForm.asignado_a,
+      notas: createForm.notas || null
+    };
+
+    const { error } = await supabase.from("cotizaciones").insert(payload);
+    if (error) {
+      toast({ title: "Error", description: "No se pudo registrar la cotización: " + error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Éxito", description: "Cotización creada manualmente." });
+      setCreateOpen(false);
+      setCreateForm({ nombre: "", email: "", telefono: "", destino: "", fecha_ida: "", fecha_regreso: "", numero_personas: "", estado: "Nueva", asignado_a: "unassigned", notas: "" });
+      fetchCotizacionesAndPerfiles();
+    }
+    setCreating(false);
   };
 
   const fetchCotizacionesAndPerfiles = async () => {
@@ -176,13 +224,18 @@ const Cotizaciones = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight">CRM de Cotizaciones</h1>
-          <p className="text-muted-foreground text-sm">Gestiona y asigna los leads captados de la landing page.</p>
+          <p className="text-muted-foreground text-sm">Gestiona y asigna los leads captados de la landing page y manualmente.</p>
         </div>
-        {nuevasCount > 0 && (
-          <Badge className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-3 py-1.5 text-sm">
-            {nuevasCount} Nueva{nuevasCount !== 1 ? "s" : ""}
-          </Badge>
-        )}
+        <div className="flex flex-wrap items-center gap-3">
+          {nuevasCount > 0 && (
+            <Badge className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-3 py-1.5 text-sm">
+              {nuevasCount} Nueva{nuevasCount !== 1 ? "s" : ""}
+            </Badge>
+          )}
+          <Button onClick={() => setCreateOpen(true)} className="gap-1.5 shadow-sm">
+            <Plus className="h-4 w-4" /> Nueva Cotización 
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row items-center gap-3 bg-card/60 p-3 rounded-2xl border border-border/50 shadow-sm">
@@ -368,6 +421,68 @@ const Cotizaciones = () => {
             <Button variant="ghost" onClick={() => setNotasOpen(false)}>Cancelar</Button>
             <Button onClick={saveNotas} disabled={savingNotas} className="bg-amber-600 hover:bg-amber-700 text-white">
               Guardar Notas
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Registrar Nueva Cotización</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
+            <div className="grid gap-1.5 md:col-span-2">
+              <Label>Nombre del Cliente *</Label>
+              <Input value={createForm.nombre} onChange={e => setCreateForm(p => ({ ...p, nombre: e.target.value }))} placeholder="Ej. Juan Pérez" />
+            </div>
+            <div className="grid gap-1.5 md:col-span-2">
+              <Label>Destino de Interés *</Label>
+              <Input value={createForm.destino} onChange={e => setCreateForm(p => ({ ...p, destino: e.target.value }))} placeholder="Ej. Cancún, México" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Teléfono / WhatsApp</Label>
+              <Input value={createForm.telefono} onChange={e => setCreateForm(p => ({ ...p, telefono: e.target.value }))} placeholder="+57 300 000 0000" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Correo Electrónico</Label>
+              <Input value={createForm.email} onChange={e => setCreateForm(p => ({ ...p, email: e.target.value }))} placeholder="correo@ejemplo.com" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Fecha Ida</Label>
+              <Input type="date" value={createForm.fecha_ida} onChange={e => setCreateForm(p => ({ ...p, fecha_ida: e.target.value }))} />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Fecha Regreso</Label>
+              <Input type="date" value={createForm.fecha_regreso} onChange={e => setCreateForm(p => ({ ...p, fecha_regreso: e.target.value }))} />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Cant. Personas</Label>
+              <Input type="number" min="1" value={createForm.numero_personas} onChange={e => setCreateForm(p => ({ ...p, numero_personas: e.target.value }))} placeholder="Ej. 2" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Asignar A</Label>
+              <Select value={createForm.asignado_a} onValueChange={(v) => setCreateForm(p => ({ ...p, asignado_a: v }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">Sin Asignar</SelectItem>
+                  {perfiles.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.nombre || p.nombre_completo || p.full_name || p.email || p.correo || `Asesor (${p.id.substring(0,4)})`}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1.5 md:col-span-2">
+              <Label>Notas Iniciales</Label>
+              <Textarea value={createForm.notas} onChange={e => setCreateForm(p => ({ ...p, notas: e.target.value }))} placeholder="Ej. Contactó por Facebook, quiere algo de lujo..." className="resize-none h-20" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCreateOpen(false)}>Cancelar</Button>
+            <Button onClick={handleCreate} disabled={creating} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              {creating ? "Guardando..." : "Crear Registro"}
             </Button>
           </DialogFooter>
         </DialogContent>
