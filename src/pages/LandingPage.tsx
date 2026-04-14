@@ -8,6 +8,7 @@ import { QuoteFormSection } from "@/components/landing/QuoteFormSection";
 import { SocialFeedSection } from "@/components/landing/SocialFeedSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { PaymentMethodsSection } from "@/components/landing/PaymentMethodsSection";
+import { LatestBlogsSection } from "@/components/landing/LatestBlogsSection";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 const LandingPage = () => {
@@ -21,6 +22,7 @@ const LandingPage = () => {
       <SocialProofSection />
       <QuoteFormSection />
       <PaymentMethodsSection />
+      <LatestBlogsSection />
       <SocialFeedSection />
       <LandingFooter />
 

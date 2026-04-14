@@ -8,7 +8,7 @@ import paymentNequi from "@/assets/payment-nequi.png";
 import paymentEfectivo from "@/assets/payment-efectivo.png";
 
 const paymentMethods = [
-  { name: "Pague en cuotas", image: paymentPlansepare },
+  { name: "Pague en cuotas Sin Intereses", image: paymentPlansepare },
   { name: "PSE", image: paymentPse },
   { name: "American Express", image: paymentAmex },
   { name: "Diners Club", image: paymentDiners },
