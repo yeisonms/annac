@@ -19,9 +19,17 @@ import {
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { isAdmin } = useAuth();
+  const { isAdmin, isMarketing } = useAuth();
 
-  const items = [
+  // Módulos exclusivos de marketing
+  const marketingItems = [
+    { title: "Blog", url: "/admin/blog", icon: Edit3 },
+    { title: "Redes (Reels)", url: "/admin/reels", icon: Instagram },
+    { title: "Casos de Éxito", url: "/admin/casos-admin", icon: Star },
+  ];
+
+  // Módulos para admin y agente (CRM)
+  const crmItems = [
     ...(isAdmin ? [{ title: "Dashboard", url: "/admin", icon: LayoutDashboard }] : []),
     { title: "Clientes", url: "/admin/clientes", icon: Users },
     { title: "Ventas", url: "/admin/ventas", icon: Plane },
@@ -34,6 +42,8 @@ export function AppSidebar() {
     ...(isAdmin ? [{ title: "Agentes", url: "/admin/usuarios", icon: UserCheck }] : []),
     ...(isAdmin ? [{ title: "Historial", url: "/admin/historial", icon: History }] : []),
   ];
+
+  const items = isMarketing ? marketingItems : crmItems;
 
   return (
     <Sidebar collapsible="icon">

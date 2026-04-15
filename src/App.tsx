@@ -54,7 +54,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
-  const { isAdmin, user, loading } = useAuth();
+  const { isAdmin, isMarketing, role, user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -90,17 +90,27 @@ function AppRoutes() {
           <ProtectedRoute>
             <AppLayout>
               <Routes>
-                <Route index element={isAdmin ? <Dashboard /> : <Navigate to="/admin/ventas" replace />} />
-                <Route path="clientes" element={<Clientes />} />
-                <Route path="ventas" element={<Ventas />} />
-                <Route path="cartera" element={<Cartera />} />
-                <Route path="proveedores" element={<Proveedores />} />
-                <Route path="cotizaciones" element={<Cotizaciones />} />
-                <Route path="reels" element={isAdmin ? <Reels /> : <Navigate to="/admin" replace />} />
-                <Route path="blog" element={isAdmin ? <BlogAdmin /> : <Navigate to="/admin" replace />} />
-                <Route path="casos-admin" element={isAdmin ? <CasosExitoAdmin /> : <Navigate to="/admin" replace />} />
+                <Route
+                  index
+                  element={
+                    isAdmin ? <Dashboard /> :
+                    isMarketing ? <Navigate to="/admin/blog" replace /> :
+                    <Navigate to="/admin/ventas" replace />
+                  }
+                />
+                {/* Rutas CRM — bloqueadas para marketing */}
+                <Route path="clientes"    element={!isMarketing ? <Clientes />    : <Navigate to="/admin/blog" replace />} />
+                <Route path="ventas"      element={!isMarketing ? <Ventas />      : <Navigate to="/admin/blog" replace />} />
+                <Route path="cartera"     element={!isMarketing ? <Cartera />     : <Navigate to="/admin/blog" replace />} />
+                <Route path="proveedores" element={!isMarketing ? <Proveedores /> : <Navigate to="/admin/blog" replace />} />
+                <Route path="cotizaciones" element={!isMarketing ? <Cotizaciones /> : <Navigate to="/admin/blog" replace />} />
+                <Route path="historial"   element={!isMarketing ? <Historial />   : <Navigate to="/admin/blog" replace />} />
+                {/* Rutas Content — admin y marketing */}
+                <Route path="blog"        element={(isAdmin || isMarketing) ? <BlogAdmin />       : <Navigate to="/admin/ventas" replace />} />
+                <Route path="reels"       element={(isAdmin || isMarketing) ? <Reels />           : <Navigate to="/admin/ventas" replace />} />
+                <Route path="casos-admin" element={(isAdmin || isMarketing) ? <CasosExitoAdmin /> : <Navigate to="/admin/ventas" replace />} />
+                {/* Rutas exclusivas de admin */}
                 <Route path="usuarios" element={isAdmin ? <Usuarios /> : <Navigate to="/admin" replace />} />
-                <Route path="historial" element={<Historial />} />
               </Routes>
             </AppLayout>
           </ProtectedRoute>

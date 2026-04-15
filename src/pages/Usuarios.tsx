@@ -18,12 +18,12 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, RefreshCw, ShieldCheck, UserCog } from "lucide-react";
+import { Users, RefreshCw, ShieldCheck, UserCog, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
 type EstadoPerfil = "pendiente" | "activo" | "inactivo";
-type Rol = "admin" | "agente";
+type Rol = "admin" | "agente" | "marketing";
 
 interface Perfil {
   id: string;
@@ -41,8 +41,9 @@ const estadoBadge: Record<EstadoPerfil, JSX.Element> = {
 };
 
 const rolBadge: Record<Rol, JSX.Element> = {
-  admin:  <Badge variant="outline" className="border-primary text-primary gap-1"><ShieldCheck className="h-3 w-3" />Admin</Badge>,
-  agente: <Badge variant="outline" className="gap-1"><UserCog className="h-3 w-3" />Agente</Badge>,
+  admin:     <Badge variant="outline" className="border-primary text-primary gap-1"><ShieldCheck className="h-3 w-3" />Admin</Badge>,
+  agente:    <Badge variant="outline" className="gap-1"><UserCog className="h-3 w-3" />Agente</Badge>,
+  marketing: <Badge variant="outline" className="border-purple-500 text-purple-600 gap-1"><Star className="h-3 w-3" />Marketing</Badge>,
 };
 
 export default function Usuarios() {
@@ -245,6 +246,7 @@ export default function Usuarios() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="agente">Agente</SelectItem>
+                        <SelectItem value="marketing">Marketing</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
                     </Select>
