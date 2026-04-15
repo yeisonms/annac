@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Plane, Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Login() {
@@ -31,12 +31,11 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background p-4">
       <Card className="w-full max-w-md shadow-2xl border-border/40">
         <CardHeader className="text-center space-y-4 pb-2">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-            <Plane className="h-7 w-7" />
+          <div className="mx-auto">
+            <img src="/logo3.png" alt="Annac Viajes" className="h-24 w-auto mx-auto" />
           </div>
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight">ANNAC</h1>
-            <p className="text-sm text-muted-foreground">Sistema de Gestión Financiera</p>
+            <p className="text-sm text-muted-foreground">Sistema de Gestión Interna</p>
           </div>
         </CardHeader>
         <CardContent>
