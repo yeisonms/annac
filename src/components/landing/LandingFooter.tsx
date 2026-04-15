@@ -1,5 +1,6 @@
 import { Instagram, Mail, Phone } from "lucide-react";
 import logoAnnac from "@/assets/logo-annac.png";
+import logoDark from "/logo2.png";
 
 export function LandingFooter() {
   return (
@@ -8,7 +9,7 @@ export function LandingFooter() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div>
-            <img src={logoAnnac} alt="Annac Viajes" className="h-12 w-auto mb-4 brightness-0 invert" />
+            <img src={logoDark} alt="Annac Viajes" className="h-16 w-auto mb-4" />
             <p className="text-sm text-white/70 leading-relaxed">
               Viajes personalizados a tu medida. Más de 10 años de experiencia haciendo sueños realidad.
             </p>

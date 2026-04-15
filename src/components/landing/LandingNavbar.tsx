@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Menu, X, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logoAnnac from "@/assets/logo-annac.png";
+import logoLight from "/logo1.png";
 
 const navLinks = [
   { label: "Inicio", href: "/#inicio" },
@@ -24,7 +25,7 @@ export function LandingNavbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <a href="/#inicio" className="flex items-center gap-2 shrink-0">
-            <img src={logoAnnac} alt="Annac Viajes" className="h-10 w-auto" />
+            <img src={logoLight} alt="Annac Viajes" className="h-10 w-auto" />
           </a>
 
           {/* Desktop nav */}

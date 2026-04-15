@@ -1,4 +1,5 @@
 import { LayoutDashboard, Users, Plane, Wallet, Building2, History, FileText, Instagram, Star, Edit3 } from "lucide-react";
+import logoAdmin from "/logo4.png";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,18 +36,15 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border/50 px-4 py-5">
+      <SidebarHeader className="border-b border-sidebar-border/50 px-4 py-4">
         {!collapsed && (
-          <div className="flex items-center gap-3 px-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-              <Plane className="h-4 w-4" />
-            </div>
-            <span className="text-xl font-extrabold tracking-tight text-sidebar-foreground">ANNAC</span>
+          <div className="flex items-center justify-center px-2">
+            <img src={logoAdmin} alt="Annac Viajes" className="h-14 w-auto" />
           </div>
         )}
         {collapsed && (
-          <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-            <Plane className="h-4 w-4" />
+          <div className="mx-auto flex items-center justify-center h-9 w-9">
+            <img src={logoAdmin} alt="Annac" className="h-9 w-9 object-contain" />
           </div>
         )}
       </SidebarHeader>
