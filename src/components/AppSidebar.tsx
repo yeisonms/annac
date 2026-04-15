@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Plane, Wallet, Building2, History, FileText, Instagram, Star, Edit3 } from "lucide-react";
+import { LayoutDashboard, Users, Plane, Wallet, Building2, History, FileText, Instagram, Star, Edit3, UserCheck } from "lucide-react";
 import logoAdmin from "/logo4.png";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -19,9 +19,17 @@ import {
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { isAdmin } = useAuth();
+  const { isAdmin, isMarketing } = useAuth();
 
-  const items = [
+  // Módulos exclusivos de marketing
+  const marketingItems = [
+    { title: "Blog", url: "/admin/blog", icon: Edit3 },
+    { title: "Redes (Reels)", url: "/admin/reels", icon: Instagram },
+    { title: "Casos de Éxito", url: "/admin/casos-admin", icon: Star },
+  ];
+
+  // Módulos para admin y agente (CRM)
+  const crmItems = [
     ...(isAdmin ? [{ title: "Dashboard", url: "/admin", icon: LayoutDashboard }] : []),
     { title: "Clientes", url: "/admin/clientes", icon: Users },
     { title: "Ventas", url: "/admin/ventas", icon: Plane },
@@ -31,8 +39,11 @@ export function AppSidebar() {
     ...(isAdmin ? [{ title: "Blog", url: "/admin/blog", icon: Edit3 }] : []),
     ...(isAdmin ? [{ title: "Redes (Reels)", url: "/admin/reels", icon: Instagram }] : []),
     ...(isAdmin ? [{ title: "Casos de Éxito", url: "/admin/casos-admin", icon: Star }] : []),
+    ...(isAdmin ? [{ title: "Agentes", url: "/admin/usuarios", icon: UserCheck }] : []),
     ...(isAdmin ? [{ title: "Historial", url: "/admin/historial", icon: History }] : []),
   ];
+
+  const items = isMarketing ? marketingItems : crmItems;
 
   return (
     <Sidebar collapsible="icon">

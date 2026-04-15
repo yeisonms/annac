@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -75,6 +76,12 @@ export default function Login() {
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Iniciar Sesión
             </Button>
+            <p className="text-center text-sm text-muted-foreground">
+              ¿Necesitas acceso?{" "}
+              <Link to="/registro" className="font-medium text-primary hover:underline">
+                Solicita tu cuenta
+              </Link>
+            </p>
           </form>
         </CardContent>
       </Card>

@@ -20,15 +20,18 @@ import CasosExitoAdmin from "@/pages/CasosExitoAdmin";
 import BlogAdmin from "@/pages/BlogAdmin";
 import DestinationDetail from "@/pages/DestinationDetail";
 import Login from "@/pages/Login";
+import Registro from "@/pages/Registro";
+import Espera from "@/pages/Espera";
 import QuoteRedirect from "@/pages/QuoteRedirect";
 import Cotizaciones from "@/pages/Cotizaciones";
+import Usuarios from "@/pages/Usuarios";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, estadoPerfil } = useAuth();
 
   if (loading) {
     return (
@@ -42,11 +45,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
+  // Gatekeeper: solo usuarios activos pueden entrar al admin
+  if (estadoPerfil !== null && estadoPerfil !== "activo") {
+    return <Navigate to="/espera" replace />;
+  }
+
   return <>{children}</>;
 }
 
 function AppRoutes() {
-  const { isAdmin, user, loading } = useAuth();
+  const { isAdmin, isMarketing, role, user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -69,21 +77,40 @@ function AppRoutes() {
         element={user ? <Navigate to="/admin" replace /> : <Login />}
       />
       <Route
+        path="/registro"
+        element={user ? <Navigate to="/admin" replace /> : <Registro />}
+      />
+      <Route
+        path="/espera"
+        element={!user ? <Navigate to="/login" replace /> : <Espera />}
+      />
+      <Route
         path="/admin/*"
         element={
           <ProtectedRoute>
             <AppLayout>
               <Routes>
-                <Route index element={isAdmin ? <Dashboard /> : <Navigate to="/admin/ventas" replace />} />
-                <Route path="clientes" element={<Clientes />} />
-                <Route path="ventas" element={<Ventas />} />
-                <Route path="cartera" element={<Cartera />} />
-                <Route path="proveedores" element={<Proveedores />} />
-                <Route path="cotizaciones" element={<Cotizaciones />} />
-                <Route path="reels" element={isAdmin ? <Reels /> : <Navigate to="/admin" replace />} />
-                <Route path="blog" element={isAdmin ? <BlogAdmin /> : <Navigate to="/admin" replace />} />
-                <Route path="casos-admin" element={isAdmin ? <CasosExitoAdmin /> : <Navigate to="/admin" replace />} />
-                <Route path="historial" element={<Historial />} />
+                <Route
+                  index
+                  element={
+                    isAdmin ? <Dashboard /> :
+                    isMarketing ? <Navigate to="/admin/blog" replace /> :
+                    <Navigate to="/admin/ventas" replace />
+                  }
+                />
+                {/* Rutas CRM — bloqueadas para marketing */}
+                <Route path="clientes"    element={!isMarketing ? <Clientes />    : <Navigate to="/admin/blog" replace />} />
+                <Route path="ventas"      element={!isMarketing ? <Ventas />      : <Navigate to="/admin/blog" replace />} />
+                <Route path="cartera"     element={!isMarketing ? <Cartera />     : <Navigate to="/admin/blog" replace />} />
+                <Route path="proveedores" element={!isMarketing ? <Proveedores /> : <Navigate to="/admin/blog" replace />} />
+                <Route path="cotizaciones" element={!isMarketing ? <Cotizaciones /> : <Navigate to="/admin/blog" replace />} />
+                <Route path="historial"   element={!isMarketing ? <Historial />   : <Navigate to="/admin/blog" replace />} />
+                {/* Rutas Content — admin y marketing */}
+                <Route path="blog"        element={(isAdmin || isMarketing) ? <BlogAdmin />       : <Navigate to="/admin/ventas" replace />} />
+                <Route path="reels"       element={(isAdmin || isMarketing) ? <Reels />           : <Navigate to="/admin/ventas" replace />} />
+                <Route path="casos-admin" element={(isAdmin || isMarketing) ? <CasosExitoAdmin /> : <Navigate to="/admin/ventas" replace />} />
+                {/* Rutas exclusivas de admin */}
+                <Route path="usuarios" element={isAdmin ? <Usuarios /> : <Navigate to="/admin" replace />} />
               </Routes>
             </AppLayout>
           </ProtectedRoute>

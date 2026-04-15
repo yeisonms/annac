@@ -25,7 +25,7 @@ export function LandingNavbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <a href="/#inicio" className="flex items-center gap-2 shrink-0">
-            <img src={logoLight} alt="Annac Viajes" className="h-10 w-auto" />
+            <img src={logoLight} alt="Annac Viajes" className="h-10 lg:h-14 w-auto" />
           </a>
 
           {/* Desktop nav */}
