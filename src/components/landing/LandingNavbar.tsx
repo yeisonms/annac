@@ -9,7 +9,6 @@ const navLinks = [
   { label: "Destinos", href: "/#destinos" },
   { label: "Blog", href: "/blog" },
   { label: "Casos de éxito", href: "/casos-exito" },
-  { label: "Cotizar", href: "/#cotizar" },
 ];
 
 export function LandingNavbar() {
@@ -29,7 +28,7 @@ export function LandingNavbar() {
           </a>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
               <a
                 key={link.href}
@@ -42,15 +41,18 @@ export function LandingNavbar() {
           </div>
 
           {/* Desktop CTA */}
-          <div className="hidden md:flex items-center gap-3">
-            <Button variant="outline" size="sm" asChild>
-              <a href="/#cotizar">Contacto</a>
+          <div className="hidden lg:flex items-center gap-3">
+            <Button size="sm" className="bg-coral hover:bg-coral/90 text-coral-foreground transition-all" asChild>
+              <a href="/#cotizar">Cotizar con agente</a>
+            </Button>
+            <Button variant="outline" size="sm" className="transition-all" asChild>
+              <a href="https://www.aviatour.com" target="_blank" rel="noopener noreferrer">Cotiza en línea</a>
             </Button>
           </div>
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden p-2 text-foreground"
+            className="lg:hidden p-2 text-foreground"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
           >
@@ -61,7 +63,7 @@ export function LandingNavbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-card border-b border-border shadow-lg animate-in slide-in-from-top-2">
+        <div className="lg:hidden bg-card border-b border-border shadow-lg animate-in slide-in-from-top-2">
           <div className="px-4 py-4 space-y-3">
             {navLinks.map((link) => (
               <a
@@ -73,9 +75,12 @@ export function LandingNavbar() {
                 {link.label}
               </a>
             ))}
-            <div className="flex flex-col gap-2 pt-2">
+            <div className="flex flex-col gap-2 pt-4 border-t mt-2">
+              <Button size="sm" className="bg-coral hover:bg-coral/90 text-coral-foreground" asChild>
+                <a href="/#cotizar" onClick={() => setMobileOpen(false)}>Cotizar con agente</a>
+              </Button>
               <Button variant="outline" size="sm" asChild>
-                <a href="#cotizar" onClick={() => setMobileOpen(false)}>Contacto</a>
+                <a href="https://www.aviatour.com" target="_blank" rel="noopener noreferrer" onClick={() => setMobileOpen(false)}>Cotiza en línea</a>
               </Button>
             </div>
           </div>
