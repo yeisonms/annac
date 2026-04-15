@@ -20,15 +20,18 @@ import CasosExitoAdmin from "@/pages/CasosExitoAdmin";
 import BlogAdmin from "@/pages/BlogAdmin";
 import DestinationDetail from "@/pages/DestinationDetail";
 import Login from "@/pages/Login";
+import Registro from "@/pages/Registro";
+import Espera from "@/pages/Espera";
 import QuoteRedirect from "@/pages/QuoteRedirect";
 import Cotizaciones from "@/pages/Cotizaciones";
+import Usuarios from "@/pages/Usuarios";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, estadoPerfil } = useAuth();
 
   if (loading) {
     return (
@@ -40,6 +43,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Gatekeeper: solo usuarios activos pueden entrar al admin
+  if (estadoPerfil !== null && estadoPerfil !== "activo") {
+    return <Navigate to="/espera" replace />;
   }
 
   return <>{children}</>;
@@ -69,6 +77,14 @@ function AppRoutes() {
         element={user ? <Navigate to="/admin" replace /> : <Login />}
       />
       <Route
+        path="/registro"
+        element={user ? <Navigate to="/admin" replace /> : <Registro />}
+      />
+      <Route
+        path="/espera"
+        element={!user ? <Navigate to="/login" replace /> : <Espera />}
+      />
+      <Route
         path="/admin/*"
         element={
           <ProtectedRoute>
@@ -83,6 +99,7 @@ function AppRoutes() {
                 <Route path="reels" element={isAdmin ? <Reels /> : <Navigate to="/admin" replace />} />
                 <Route path="blog" element={isAdmin ? <BlogAdmin /> : <Navigate to="/admin" replace />} />
                 <Route path="casos-admin" element={isAdmin ? <CasosExitoAdmin /> : <Navigate to="/admin" replace />} />
+                <Route path="usuarios" element={isAdmin ? <Usuarios /> : <Navigate to="/admin" replace />} />
                 <Route path="historial" element={<Historial />} />
               </Routes>
             </AppLayout>
