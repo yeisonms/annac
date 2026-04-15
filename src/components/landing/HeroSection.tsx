@@ -88,13 +88,21 @@ export function HeroSection() {
           <br className="hidden sm:block" />
           Más de 10 años haciendo sueños realidad.
         </p>
-        <div className="animate-in slide-in-from-bottom-10 duration-700 delay-300">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-in slide-in-from-bottom-10 duration-700 delay-300">
           <Button
             size="lg"
-            className="bg-coral hover:bg-coral/90 text-coral-foreground text-base px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            className="w-full sm:w-auto bg-coral hover:bg-coral/90 text-coral-foreground text-base px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
             asChild
           >
-            <a href="#cotizar">Cotizar mi viaje ahora</a>
+            <a href="#cotizar">Cotizar con un agente</a>
+          </Button>
+          
+          <Button
+            size="lg"
+            className="w-full sm:w-auto bg-white/10 hover:bg-white/20 border border-white/30 text-white backdrop-blur-sm text-base px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            asChild
+          >
+            <a href="https://www.aviatour.com" target="_blank" rel="noopener noreferrer">Cotiza en línea</a>
           </Button>
         </div>
       </div>
