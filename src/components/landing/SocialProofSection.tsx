@@ -115,7 +115,8 @@ export function SocialProofSection() {
   return (
     <section className="py-16 lg:py-24 bg-background" id="testimonios">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Google Reviews */}
+        {/* Google Reviews (Oculto temporalmente según solicitud) */}
+        {/*
         <div className="mb-16 lg:mb-20">
           <div className="flex items-center gap-3 mb-2">
             <GoogleLogo />
@@ -144,6 +145,7 @@ export function SocialProofSection() {
             ))}
           </div>
         </div>
+        */}
 
         {/* Success Cases */}
         <div>
