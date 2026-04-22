@@ -74,13 +74,21 @@ const DestinationDetail = () => {
           ))}
         </div>
 
-        <div className="mt-12 text-center">
-          <a
-            href="/#cotizar"
+        <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <button
+            onClick={() => navigate(`/?destino=${encodeURIComponent(category.name)}#cotizar`)}
             className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors shadow-lg"
           >
             <Plane className="h-5 w-5" />
-            Cotizar mi viaje
+            Cotizar con agente
+          </button>
+          <a
+            href="https://reservas.annacviajesatumedida.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-full border-2 border-primary text-primary font-semibold hover:bg-primary/5 transition-colors shadow-lg"
+          >
+            Cotiza en línea
           </a>
         </div>
       </section>
