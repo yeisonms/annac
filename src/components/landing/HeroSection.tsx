@@ -102,7 +102,7 @@ export function HeroSection() {
             className="w-full sm:w-auto bg-white/10 hover:bg-white/20 border border-white/30 text-white backdrop-blur-sm text-base px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
             asChild
           >
-            <a href="https://www.aviatour.com" target="_blank" rel="noopener noreferrer">Cotiza en línea</a>
+            <a href="https://reservas.annacviajesatumedida.com/" target="_blank" rel="noopener noreferrer">Cotiza en línea</a>
           </Button>
         </div>
       </div>
