@@ -47,7 +47,7 @@ export function LandingNavbar() {
               <a href="/#cotizar">Cotizar con agente</a>
             </Button>
             <Button variant="outline" size="sm" className="transition-all" asChild>
-              <a href="https://www.aviatour.com" target="_blank" rel="noopener noreferrer">Cotiza en línea</a>
+              <a href="https://reservas.annacviajesatumedida.com/" target="_blank" rel="noopener noreferrer">Cotiza en línea</a>
             </Button>
           </div>
 
@@ -81,7 +81,7 @@ export function LandingNavbar() {
                 <a href="/#cotizar" onClick={() => setMobileOpen(false)}>Cotizar con agente</a>
               </Button>
               <Button variant="outline" size="sm" asChild>
-                <a href="https://www.aviatour.com" target="_blank" rel="noopener noreferrer" onClick={() => setMobileOpen(false)}>Cotiza en línea</a>
+                <a href="https://reservas.annacviajesatumedida.com/" target="_blank" rel="noopener noreferrer" onClick={() => setMobileOpen(false)}>Cotiza en línea</a>
               </Button>
             </div>
           </div>
