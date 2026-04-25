@@ -33,6 +33,7 @@ export function QuoteFormSection() {
   const [loading, setLoading] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedDestino, setSelectedDestino] = useState<string>("");
+  const [customDestino, setCustomDestino] = useState("");
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -65,11 +66,16 @@ export function QuoteFormSection() {
       nombre: nombre.trim(),
       email: email.trim(),
       telefono: telefono.trim(),
-      destino: selectedDestino,
+      destino: selectedDestino === "Otro" ? customDestino.trim() : selectedDestino,
       fechaIda,
       fechaRegreso,
       numeroPersonas: parseInt(personas, 10),
     };
+
+    if (selectedDestino === "Otro" && !payload.destino) {
+      toast.error("Por favor escribe el destino deseado.");
+      return;
+    }
 
     if (isInsideIframe()) {
       saveQuoteRedirectPayload(payload);
@@ -100,6 +106,7 @@ export function QuoteFormSection() {
       setEmail("");
       setTelefono("");
       setSelectedDestino("");
+      setCustomDestino("");
       setFechaIda("");
       setFechaRegreso("");
       setPersonas("");
@@ -160,6 +167,16 @@ export function QuoteFormSection() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {selectedDestino === "Otro" && (
+                    <Input
+                      id="customDestino"
+                      placeholder="Escribe aquí el lugar de tus sueños..."
+                      required
+                      value={customDestino}
+                      onChange={(e) => setCustomDestino(e.target.value)}
+                      className="mt-2 animate-in fade-in"
+                    />
+                  )}
                 </div>
               </div>
 

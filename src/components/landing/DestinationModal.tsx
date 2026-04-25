@@ -138,14 +138,24 @@ export function DestinationModal({ open, onOpenChange, destinationName, onQuote 
             </DialogDescription>
           </DialogHeader>
 
-          <Button
-            onClick={handleQuote}
-            size="lg"
-            className="w-full bg-coral hover:bg-coral/90 text-coral-foreground rounded-xl py-6 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            <Plane className="h-5 w-5 mr-2" />
-            Cotizar viaje a {destinationName}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <Button
+              onClick={handleQuote}
+              className="flex-1 h-12 bg-coral hover:bg-coral/90 text-coral-foreground rounded-xl text-sm sm:text-base font-semibold shadow-md hover:shadow-lg transition-all duration-300"
+            >
+              <Plane className="h-4 w-4 sm:h-5 sm:w-5 mr-2 shrink-0" />
+              Cotizar con agente
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="flex-1 h-12 border-2 border-primary text-primary hover:bg-primary/5 rounded-xl text-sm sm:text-base font-semibold shadow-sm transition-all duration-300"
+            >
+              <a href="https://reservas.annacviajesatumedida.com/" target="_blank" rel="noopener noreferrer">
+                Cotiza en línea
+              </a>
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
