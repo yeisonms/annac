@@ -17,24 +17,24 @@ interface Video {
 const videos: Video[] = [
   {
     id: "v1",
-    youtubeId: "gtckSqaXCk8",
-    title: "Colombia: Magia Salvaje",
-    description: "Descubre los paisajes más impactantes de Colombia, desde las selvas del Amazonas hasta las playas del Caribe.",
-    thumbnail: "https://img.youtube.com/vi/0NyVOFeLnyA/maxresdefault.jpg",
+    youtubeId: "UAccpOZmmzQ",
+    title: "Viaja a Guatemala con ANNAC",
+    description: "Descubre los paisajes más impactantes de Guatemala. ¿Sueñas con los volcanes de Antigua, el amanecer en Tikal o los colores de Atitlán? ",
+    thumbnail: "/volcan.png",
   },
   {
     id: "v2",
-    youtubeId: "gtckSqaXCk8",
-    title: "Luna de Miel en el Caribe",
-    description: "Suites privadas, playas de arena blanca y atardeceres infinitos. La luna de miel perfecta te espera.",
-    thumbnail: "https://images.pexels.com/photos/1430676/pexels-photo-1430676.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop",
+    youtubeId: "GGUIthx4Cjw",
+    title: "Conoce el Amazonas con ANNAC",
+    description: "¿Sueñas con visitar el Amazonas? Colombia y Perú te esperan con selvas vibrantes, ríos majestuosos y una biodiversidad que te dejará sin aliento. ",
+    thumbnail: "/amazonas.webp",
   },
   {
     id: "v3",
-    youtubeId: "gtckSqaXCk8",
-    title: "Viajes en Familia Inolvidables",
-    description: "Experiencias diseñadas para que cada miembro de la familia cree recuerdos que duran toda la vida.",
-    thumbnail: "https://images.pexels.com/photos/1619317/pexels-photo-1619317.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop",
+    youtubeId: "B3F2UbMOPTQ",
+    title: "Tu viaje perfecto a Palomino empieza con ANNAC",
+    description: "Palomino tiene una magia única, y en ANNAC te ayudamos a descubrirla a tu ritmo.",
+    thumbnail: "/palomino.png",
   },
 ];
 
