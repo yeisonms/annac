@@ -21,6 +21,8 @@ import BlogAdmin from "@/pages/BlogAdmin";
 import DestinationDetail from "@/pages/DestinationDetail";
 import Login from "@/pages/Login";
 import Registro from "@/pages/Registro";
+import RecuperarPassword from "@/pages/RecuperarPassword";
+import ActualizarPassword from "@/pages/ActualizarPassword";
 import Espera from "@/pages/Espera";
 import QuoteRedirect from "@/pages/QuoteRedirect";
 import Cotizaciones from "@/pages/Cotizaciones";
@@ -79,6 +81,14 @@ function AppRoutes() {
       <Route
         path="/registro"
         element={user ? <Navigate to="/admin" replace /> : <Registro />}
+      />
+      <Route
+        path="/recuperar-password"
+        element={user ? <Navigate to="/admin" replace /> : <RecuperarPassword />}
+      />
+      <Route
+        path="/actualizar-password"
+        element={<ActualizarPassword />}
       />
       <Route
         path="/espera"
