@@ -4,6 +4,7 @@ import { ServicesSection } from "@/components/landing/ServicesSection";
 import { DestinationsSection } from "@/components/landing/DestinationsSection";
 import { AboutSection } from "@/components/landing/AboutSection";
 import { SocialProofSection } from "@/components/landing/SocialProofSection";
+import { FaqSection } from "@/components/landing/FaqSection";
 import { QuoteFormSection } from "@/components/landing/QuoteFormSection";
 import { SocialFeedSection } from "@/components/landing/SocialFeedSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
@@ -26,6 +27,7 @@ const LandingPage = () => {
       <PaymentMethodsSection />
       <SocialFeedSection />
       <LatestBlogsSection />
+      <FaqSection />
       <LandingFooter />
 
       {/* Floating WhatsApp Button */}
