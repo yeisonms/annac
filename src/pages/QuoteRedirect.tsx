@@ -32,6 +32,10 @@ const QuoteRedirect = () => {
           fecha_ida: payload.fechaIda,
           fecha_regreso: payload.fechaRegreso,
           numero_personas: payload.numeroPersonas,
+          adultos: payload.adultos,
+          ninos: payload.menores,
+          infantes: 0,
+          edades_menores: payload.edadesMenores?.length > 0 ? payload.edadesMenores : null,
         });
 
         if (error) throw error;

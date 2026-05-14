@@ -1,0 +1,32 @@
+{
+  "name": "Annac Viajes a tu Medida",
+  "short_name": "Annac Viajes",
+  "description": "Viajes personalizados, sin estrés y ajustados a tu presupuesto. Más de 10 años haciendo sueños realidad.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#1a3b5c",
+  "lang": "es",
+  "categories": ["travel", "lifestyle"],
+  "icons": [
+    {
+      "src": "/logo3.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo3.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/logo4.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

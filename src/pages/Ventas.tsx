@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Loader2, Eye } from "lucide-react";
+import { Plus, Trash2, Loader2, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import VentaDetailSheet from "@/components/VentaDetailSheet";
 
@@ -63,7 +63,44 @@ export default function Ventas() {
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [editingVentaId, setEditingVentaId] = useState<string | null>(null);
   const [detailVenta, setDetailVenta] = useState<VentaRow | null>(null);
+
+  const isEditing = !!editingVentaId;
+
+  const openCreateDialog = () => {
+    setEditingVentaId(null);
+    setForm(emptyForm);
+    setOpen(true);
+  };
+
+  const openEditDialog = (v: VentaRow) => {
+    setEditingVentaId(v.id);
+    setForm({
+      cliente_id: v.cliente_id,
+      destino: v.destino,
+      fecha_venta: v.fecha_venta ?? "",
+      fecha_inicio_viaje: v.fecha_inicio_viaje ?? "",
+      fecha_fin_viaje: v.fecha_fin_viaje ?? "",
+      codigo_reserva_aerea: v.codigo_reserva_aerea ?? "",
+      codigo_reserva_hotel: v.codigo_reserva_hotel ?? "",
+      receptivos_programa: v.receptivos_programa ?? "",
+      valor_total_venta: v.valor_total_venta,
+      anticipo: 0,
+      metodo_pago_anticipo: "Transferencia",
+      costo_por_proveedor: v.costo_por_proveedor,
+      plazo_pago_cliente: v.plazo_pago_cliente ?? "",
+    });
+    setOpen(true);
+  };
+
+  const handleDialogClose = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      setEditingVentaId(null);
+      setForm(emptyForm);
+    }
+  };
 
   const ingreso = form.valor_total_venta - form.costo_por_proveedor;
 
@@ -102,9 +139,6 @@ export default function Ventas() {
     }
     setSaving(true);
 
-    const saldoCalculado = form.valor_total_venta - form.anticipo;
-    const estadoPago = saldoCalculado <= 0 ? "COMPLETO" : "PENDIENTE";
-
     const payloadVenta = {
       cliente_id: form.cliente_id,
       destino: form.destino,
@@ -116,44 +150,67 @@ export default function Ventas() {
       receptivos_programa: form.receptivos_programa || null,
       valor_total_venta: form.valor_total_venta,
       costo_por_proveedor: form.costo_por_proveedor,
-      saldo_cliente: saldoCalculado,
-      estado_pago_cliente: estadoPago,
       plazo_pago_cliente: form.plazo_pago_cliente || null,
     };
 
-    // Paso A: Crear la Venta
-    const { data: nuevaVenta, error: errorVenta } = await supabase
-      .from("ventas")
-      .insert(payloadVenta)
-      .select("id")
-      .single();
+    if (isEditing) {
+      // --- Modo Edición: UPDATE ---
+      const { error } = await supabase
+        .from("ventas")
+        .update(payloadVenta)
+        .eq("id", editingVentaId);
 
-    if (errorVenta) {
-      toast.error("Error al crear la venta: " + errorVenta.message);
-      setSaving(false);
-      return;
+      if (error) {
+        toast.error("Error al actualizar la reserva: " + error.message);
+        setSaving(false);
+        return;
+      }
+
+      toast.success("Reserva actualizada correctamente");
+    } else {
+      // --- Modo Creación: INSERT ---
+      const saldoCalculado = form.valor_total_venta - form.anticipo;
+      const estadoPago = saldoCalculado <= 0 ? "COMPLETO" : "PENDIENTE";
+
+      const { data: nuevaVenta, error: errorVenta } = await supabase
+        .from("ventas")
+        .insert({
+          ...payloadVenta,
+          saldo_cliente: saldoCalculado,
+          estado_pago_cliente: estadoPago,
+        })
+        .select("id")
+        .single();
+
+      if (errorVenta) {
+        toast.error("Error al crear la venta: " + errorVenta.message);
+        setSaving(false);
+        return;
+      }
+
+      // Registrar el Anticipo en Cartera
+      if (form.anticipo > 0) {
+        const { error: errorPago } = await supabase
+          .from("pagos_clientes")
+          .insert({
+            venta_id: nuevaVenta.id,
+            monto_abonado: form.anticipo,
+            metodo_pago: form.metodo_pago_anticipo,
+            fecha_pago: new Date().toISOString().split("T")[0],
+          });
+
+        if (errorPago) {
+          toast.error("Venta creada, pero error al registrar el anticipo: " + errorPago.message);
+          setSaving(false);
+          return;
+        }
+      }
+
+      toast.success("Venta y Anticipo registrados exitosamente");
     }
 
-    // Paso B: Registrar el Anticipo en Cartera
-    const payloadPago = {
-      venta_id: nuevaVenta.id,
-      monto_abonado: form.anticipo,
-      metodo_pago: form.metodo_pago_anticipo,
-      fecha_pago: new Date().toISOString().split("T")[0],
-    };
-
-    const { error: errorPago } = await supabase
-      .from("pagos_clientes")
-      .insert(payloadPago);
-
-    if (errorPago) {
-      toast.error("Venta creada, pero error al registrar el anticipo: " + errorPago.message);
-      setSaving(false);
-      return;
-    }
-
-    toast.success("Venta y Anticipo registrados exitosamente");
     setForm(emptyForm);
+    setEditingVentaId(null);
     setOpen(false);
     fetchVentas();
     setSaving(false);
@@ -176,12 +233,12 @@ export default function Ventas() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Reservas / Ventas</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-1" /> Nueva Reserva</Button>
+            <Button onClick={openCreateDialog}><Plus className="h-4 w-4 mr-1" /> Nueva Reserva</Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Nueva Reserva</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{isEditing ? "Editar Reserva" : "Nueva Reserva"}</DialogTitle></DialogHeader>
             <div className="grid gap-3 py-2 sm:grid-cols-2">
               {/* Cliente selector */}
               <div className="grid gap-1.5">
@@ -227,26 +284,30 @@ export default function Ventas() {
                 <Label>Valor Total Venta</Label>
                 <Input type="number" value={form.valor_total_venta || ""} onChange={(e) => setForm((p) => ({ ...p, valor_total_venta: Number(e.target.value) }))} />
               </div>
-              <div className="grid gap-1.5">
-                <Label>Anticipo (Primer Abono) *</Label>
-                <Input type="number" value={form.anticipo || ""} onChange={(e) => setForm((p) => ({ ...p, anticipo: Number(e.target.value) }))} min={0} required />
-              </div>
-              <div className="grid gap-1.5">
-                <Label>Método de Pago del Anticipo</Label>
-                <Select value={form.metodo_pago_anticipo} onValueChange={(v) => setForm((p) => ({ ...p, metodo_pago_anticipo: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Efectivo">Efectivo</SelectItem>
-                    <SelectItem value="Transferencia">Transferencia</SelectItem>
-                    <SelectItem value="Tarjeta de Crédito">Tarjeta de Crédito</SelectItem>
-                    <SelectItem value="Tarjeta de Débito">Tarjeta de Débito</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-1.5">
-                <Label>Saldo (Calculado)</Label>
-                <Input value={formatCurrency(Math.max(0, form.valor_total_venta - form.anticipo))} readOnly className="bg-muted font-semibold text-danger" />
-              </div>
+              {!isEditing && (
+                <>
+                  <div className="grid gap-1.5">
+                    <Label>Anticipo (Primer Abono) *</Label>
+                    <Input type="number" value={form.anticipo || ""} onChange={(e) => setForm((p) => ({ ...p, anticipo: Number(e.target.value) }))} min={0} required />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>Método de Pago del Anticipo</Label>
+                    <Select value={form.metodo_pago_anticipo} onValueChange={(v) => setForm((p) => ({ ...p, metodo_pago_anticipo: v }))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Efectivo">Efectivo</SelectItem>
+                        <SelectItem value="Transferencia">Transferencia</SelectItem>
+                        <SelectItem value="Tarjeta de Crédito">Tarjeta de Crédito</SelectItem>
+                        <SelectItem value="Tarjeta de Débito">Tarjeta de Débito</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>Saldo (Calculado)</Label>
+                    <Input value={formatCurrency(Math.max(0, form.valor_total_venta - form.anticipo))} readOnly className="bg-muted font-semibold text-danger" />
+                  </div>
+                </>
+              )}
               {isAdmin && (
                 <>
                   <div className="grid gap-1.5">
@@ -267,7 +328,7 @@ export default function Ventas() {
             <DialogFooter>
               <Button onClick={handleSave} disabled={saving}>
                 {saving && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-                Guardar Reserva
+                {isEditing ? "Guardar Cambios" : "Guardar Reserva"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -331,6 +392,9 @@ export default function Ventas() {
                           <div className="flex items-center justify-end gap-1">
                             <Button variant="ghost" size="icon" onClick={() => setDetailVenta(v)} title="Ver detalles">
                               <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => openEditDialog(v)} title="Editar reserva">
+                              <Pencil className="h-4 w-4 text-blue-600" />
                             </Button>
                             {isAdmin && (
                               <Button variant="ghost" size="icon" onClick={() => handleDelete(v.id)}>
