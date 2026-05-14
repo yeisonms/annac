@@ -14,10 +14,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Trash2, Loader2, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import VentaDetailSheet from "@/components/VentaDetailSheet";
+import { ReciboDialog, type ReciboData } from "@/components/ReciboDialog";
 
 interface ClienteOption {
   id: string;
   nombre_cliente: string;
+  celular: string | null;
 }
 
 interface VentaRow {
@@ -65,6 +67,7 @@ export default function Ventas() {
   const [form, setForm] = useState(emptyForm);
   const [editingVentaId, setEditingVentaId] = useState<string | null>(null);
   const [detailVenta, setDetailVenta] = useState<VentaRow | null>(null);
+  const [recibo, setRecibo] = useState<ReciboData | null>(null);
 
   const isEditing = !!editingVentaId;
 
@@ -122,7 +125,7 @@ export default function Ventas() {
   const fetchClientes = useCallback(async () => {
     const { data } = await supabase
       .from("clientes")
-      .select("id, nombre_cliente")
+      .select("id, nombre_cliente, celular")
       .order("nombre_cliente");
     if (data) setClientes(data);
   }, []);
@@ -204,9 +207,22 @@ export default function Ventas() {
           setSaving(false);
           return;
         }
-      }
 
-      toast.success("Venta y Anticipo registrados exitosamente");
+        // Generar recibo digital del abono inicial
+        const clienteSeleccionado = clientes.find((c) => c.id === form.cliente_id);
+        setRecibo({
+          nombreCliente: clienteSeleccionado?.nombre_cliente ?? "Cliente",
+          celular: clienteSeleccionado?.celular ?? null,
+          destino: form.destino,
+          valorAbono: form.anticipo,
+          valorTotal: form.valor_total_venta,
+          saldoPendiente: saldoCalculado,
+          fechaPago: new Date().toISOString().split("T")[0],
+          tipoAbono: "Abono Inicial",
+        });
+      } else {
+        toast.success("Venta registrada exitosamente");
+      }
     }
 
     setForm(emptyForm);
@@ -418,6 +434,9 @@ export default function Ventas() {
         onOpenChange={(o) => { if (!o) setDetailVenta(null); }}
         isAdmin={isAdmin}
       />
+
+      {/* Modal Recibo Digital (abono inicial) */}
+      <ReciboDialog recibo={recibo} onClose={() => setRecibo(null)} />
     </div>
   );
 }

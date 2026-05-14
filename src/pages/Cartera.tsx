@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Wallet, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { ReciboDialog, type ReciboData } from "@/components/ReciboDialog";
 
 interface VentaCartera {
   id: string;
@@ -20,7 +21,7 @@ interface VentaCartera {
   saldo_cliente: number;
   plazo_pago_cliente: string | null;
   estado_pago_cliente: string | null;
-  clientes: { nombre_cliente: string } | null;
+  clientes: { nombre_cliente: string; celular: string | null } | null;
 }
 
 const semaforoBadge = (fecha: string) => {
@@ -39,12 +40,13 @@ export default function Cartera() {
   const [selectedVenta, setSelectedVenta] = useState<VentaCartera | null>(null);
   const [abonoForm, setAbonoForm] = useState({ monto: 0, metodo: "Transferencia", fecha: "" });
   const [saving, setSaving] = useState(false);
+  const [recibo, setRecibo] = useState<ReciboData | null>(null);
 
   const fetchVentas = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("ventas")
-      .select("id, destino, valor_total_venta, saldo_cliente, plazo_pago_cliente, estado_pago_cliente, clientes(nombre_cliente)")
+      .select("id, destino, valor_total_venta, saldo_cliente, plazo_pago_cliente, estado_pago_cliente, clientes(nombre_cliente, celular)")
       .or("estado_pago_cliente.eq.PENDIENTE,estado_pago_cliente.eq.PARCIAL,saldo_cliente.gt.0")
       .order("plazo_pago_cliente", { ascending: true });
 
@@ -65,12 +67,13 @@ export default function Cartera() {
     setSaving(true);
     const nuevoSaldo = selectedVenta.saldo_cliente - abonoForm.monto;
     const nuevoEstado = nuevoSaldo === 0 ? "COMPLETO" : "PARCIAL";
+    const fechaPago = abonoForm.fecha || new Date().toISOString().split("T")[0];
 
     // 1. INSERT pago
     const { error: errorPago } = await supabase.from("pagos_clientes").insert({
       venta_id: selectedVenta.id,
       monto_abonado: abonoForm.monto,
-      fecha_pago: abonoForm.fecha || new Date().toISOString().split("T")[0],
+      fecha_pago: fechaPago,
       metodo_pago: abonoForm.metodo,
     });
 
@@ -88,9 +91,21 @@ export default function Cartera() {
 
     if (errorUpdate) {
       toast.error("Error al actualizar saldo: " + errorUpdate.message);
-    } else {
-      toast.success(`Abono de ${formatCurrency(abonoForm.monto)} registrado. Nuevo saldo: ${formatCurrency(nuevoSaldo)}`);
+      setSaving(false);
+      return;
     }
+
+    // 3. Generar recibo digital
+    setRecibo({
+      nombreCliente: selectedVenta.clientes?.nombre_cliente ?? "Cliente",
+      celular: selectedVenta.clientes?.celular ?? null,
+      destino: selectedVenta.destino,
+      valorAbono: abonoForm.monto,
+      valorTotal: selectedVenta.valor_total_venta,
+      saldoPendiente: nuevoSaldo,
+      fechaPago,
+      tipoAbono: "Abono realizado",
+    });
 
     setSelectedVenta(null);
     setAbonoForm({ monto: 0, metodo: "Transferencia", fecha: "" });
@@ -152,6 +167,7 @@ export default function Cartera() {
         </CardContent>
       </Card>
 
+      {/* Modal Registrar Abono */}
       <Dialog open={!!selectedVenta} onOpenChange={(open) => !open && setSelectedVenta(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Registrar Abono</DialogTitle></DialogHeader>
@@ -186,6 +202,9 @@ export default function Cartera() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal Recibo Digital (componente reutilizable) */}
+      <ReciboDialog recibo={recibo} onClose={() => setRecibo(null)} />
     </div>
   );
 }
