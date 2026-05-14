@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Wallet, Loader2 } from "lucide-react";
+import { Wallet, Loader2, MessageCircle, CheckCircle2, Plane, Receipt } from "lucide-react";
 import { toast } from "sonner";
 
 interface VentaCartera {
@@ -20,7 +20,17 @@ interface VentaCartera {
   saldo_cliente: number;
   plazo_pago_cliente: string | null;
   estado_pago_cliente: string | null;
-  clientes: { nombre_cliente: string } | null;
+  clientes: { nombre_cliente: string; celular: string | null } | null;
+}
+
+interface ReciboData {
+  nombreCliente: string;
+  celular: string | null;
+  destino: string;
+  valorAbono: number;
+  valorTotal: number;
+  saldoPendiente: number;
+  fechaPago: string;
 }
 
 const semaforoBadge = (fecha: string) => {
@@ -33,18 +43,26 @@ const semaforoBadge = (fecha: string) => {
   return <Badge className={variants[status]}>{fecha}</Badge>;
 };
 
+const buildReciboWhatsAppUrl = (recibo: ReciboData): string => {
+  const numero = recibo.celular?.replace(/\D/g, "") || "";
+  const mensaje = `¡Hola, ${recibo.nombreCliente}! ✈️\nConfirmamos la recepción de tu pago para tu próximo viaje a ${recibo.destino}.\n\n*Detalle de tu pago:*\n💰 Abono realizado: ${formatCurrency(recibo.valorAbono)}\n📅 Fecha: ${recibo.fechaPago}\n\n*Estado de tu cuenta:*\n💵 Total del viaje: ${formatCurrency(recibo.valorTotal)}\n📉 Saldo pendiente: ${formatCurrency(recibo.saldoPendiente)}\n\n¡Gracias por confiar en nosotros para tus vacaciones! Si tienes dudas, escríbenos.`;
+
+  return `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+};
+
 export default function Cartera() {
   const [ventas, setVentas] = useState<VentaCartera[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedVenta, setSelectedVenta] = useState<VentaCartera | null>(null);
   const [abonoForm, setAbonoForm] = useState({ monto: 0, metodo: "Transferencia", fecha: "" });
   const [saving, setSaving] = useState(false);
+  const [recibo, setRecibo] = useState<ReciboData | null>(null);
 
   const fetchVentas = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("ventas")
-      .select("id, destino, valor_total_venta, saldo_cliente, plazo_pago_cliente, estado_pago_cliente, clientes(nombre_cliente)")
+      .select("id, destino, valor_total_venta, saldo_cliente, plazo_pago_cliente, estado_pago_cliente, clientes(nombre_cliente, celular)")
       .or("estado_pago_cliente.eq.PENDIENTE,estado_pago_cliente.eq.PARCIAL,saldo_cliente.gt.0")
       .order("plazo_pago_cliente", { ascending: true });
 
@@ -65,12 +83,13 @@ export default function Cartera() {
     setSaving(true);
     const nuevoSaldo = selectedVenta.saldo_cliente - abonoForm.monto;
     const nuevoEstado = nuevoSaldo === 0 ? "COMPLETO" : "PARCIAL";
+    const fechaPago = abonoForm.fecha || new Date().toISOString().split("T")[0];
 
     // 1. INSERT pago
     const { error: errorPago } = await supabase.from("pagos_clientes").insert({
       venta_id: selectedVenta.id,
       monto_abonado: abonoForm.monto,
-      fecha_pago: abonoForm.fecha || new Date().toISOString().split("T")[0],
+      fecha_pago: fechaPago,
       metodo_pago: abonoForm.metodo,
     });
 
@@ -88,9 +107,20 @@ export default function Cartera() {
 
     if (errorUpdate) {
       toast.error("Error al actualizar saldo: " + errorUpdate.message);
-    } else {
-      toast.success(`Abono de ${formatCurrency(abonoForm.monto)} registrado. Nuevo saldo: ${formatCurrency(nuevoSaldo)}`);
+      setSaving(false);
+      return;
     }
+
+    // 3. Generar recibo digital
+    setRecibo({
+      nombreCliente: selectedVenta.clientes?.nombre_cliente ?? "Cliente",
+      celular: selectedVenta.clientes?.celular ?? null,
+      destino: selectedVenta.destino,
+      valorAbono: abonoForm.monto,
+      valorTotal: selectedVenta.valor_total_venta,
+      saldoPendiente: nuevoSaldo,
+      fechaPago,
+    });
 
     setSelectedVenta(null);
     setAbonoForm({ monto: 0, metodo: "Transferencia", fecha: "" });
@@ -152,6 +182,7 @@ export default function Cartera() {
         </CardContent>
       </Card>
 
+      {/* Modal Registrar Abono */}
       <Dialog open={!!selectedVenta} onOpenChange={(open) => !open && setSelectedVenta(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Registrar Abono</DialogTitle></DialogHeader>
@@ -184,6 +215,102 @@ export default function Cartera() {
               Confirmar Abono
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Recibo Digital */}
+      <Dialog open={!!recibo} onOpenChange={(open) => !open && setRecibo(null)}>
+        <DialogContent className="max-w-md">
+          <div className="flex flex-col items-center text-center pt-2">
+            <div className="flex items-center justify-center h-14 w-14 rounded-full bg-emerald-100 mb-3">
+              <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+            </div>
+            <h2 className="text-lg font-bold text-foreground">¡Pago Registrado con Éxito!</h2>
+            <p className="text-sm text-muted-foreground mt-1">Se ha generado el siguiente recibo</p>
+          </div>
+
+          {recibo && (
+            <div className="mt-4 rounded-xl border-2 border-dashed border-border bg-muted/30 p-5 space-y-4">
+              {/* Header del recibo */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Receipt className="h-5 w-5 text-primary" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-primary">Recibo de Pago</span>
+                </div>
+                <span className="text-xs text-muted-foreground">{recibo.fechaPago}</span>
+              </div>
+
+              <div className="border-t border-border" />
+
+              {/* Info del cliente */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Cliente</span>
+                  <span className="text-sm font-semibold">{recibo.nombreCliente}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Destino</span>
+                  <span className="text-sm font-semibold flex items-center gap-1">
+                    <Plane className="h-3.5 w-3.5 text-muted-foreground" />
+                    {recibo.destino}
+                  </span>
+                </div>
+              </div>
+
+              <div className="border-t border-border" />
+
+              {/* Detalle financiero */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Abono realizado</span>
+                  <span className="text-base font-bold text-emerald-600">
+                    {formatCurrency(recibo.valorAbono)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Total del viaje</span>
+                  <span className="text-sm font-medium">{formatCurrency(recibo.valorTotal)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Saldo pendiente</span>
+                  <span className={`text-sm font-bold ${recibo.saldoPendiente === 0 ? "text-emerald-600" : "text-amber-600"}`}>
+                    {recibo.saldoPendiente === 0 ? "✅ PAGADO" : formatCurrency(recibo.saldoPendiente)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {recibo && (
+            <div className="flex flex-col gap-2 mt-2">
+              {recibo.celular ? (
+                <Button
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+                  asChild
+                >
+                  <a
+                    href={buildReciboWhatsAppUrl(recibo)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Enviar Recibo por WhatsApp
+                  </a>
+                </Button>
+              ) : (
+                <p className="text-xs text-center text-muted-foreground italic">
+                  Este cliente no tiene celular registrado. Agréguelo en el módulo de Clientes para enviar recibos por WhatsApp.
+                </p>
+              )}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setRecibo(null)}
+              >
+                Cerrar
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
