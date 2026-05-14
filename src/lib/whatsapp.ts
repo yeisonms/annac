@@ -10,6 +10,9 @@ export interface QuoteRedirectPayload {
   fechaIda: string;
   fechaRegreso: string;
   numeroPersonas: number;
+  adultos: number;
+  ninos: number;
+  infantes: number;
 }
 
 export const buildWhatsAppUrl = (message?: string, phone = ANNAC_WHATSAPP_NUMBER) => {
@@ -18,8 +21,18 @@ export const buildWhatsAppUrl = (message?: string, phone = ANNAC_WHATSAPP_NUMBER
   return message ? `${baseUrl}?text=${encodeURIComponent(message)}` : baseUrl;
 };
 
-export const buildQuoteWhatsAppMessage = (payload: QuoteRedirectPayload) =>
-  `Hola Annac Viajes, mi nombre es ${payload.nombre.trim()}. Me gustaría cotizar un viaje a ${payload.destino} para ${payload.numeroPersonas} personas, del ${payload.fechaIda} al ${payload.fechaRegreso}. Mi correo es ${payload.email.trim()}.`;
+export const formatPassengerBreakdown = (adultos: number, ninos: number, infantes: number): string => {
+  const parts: string[] = [];
+  if (adultos > 0) parts.push(`${adultos} Adulto${adultos > 1 ? "s" : ""}`);
+  if (ninos > 0) parts.push(`${ninos} Niño${ninos > 1 ? "s" : ""}`);
+  if (infantes > 0) parts.push(`${infantes} Infante${infantes > 1 ? "s" : ""}`);
+  return parts.join(", ") || "1 Adulto";
+};
+
+export const buildQuoteWhatsAppMessage = (payload: QuoteRedirectPayload) => {
+  const pasajeros = formatPassengerBreakdown(payload.adultos, payload.ninos, payload.infantes);
+  return `Hola Annac Viajes, mi nombre es ${payload.nombre.trim()}. Me gustaría cotizar un viaje a ${payload.destino} (${pasajeros}), del ${payload.fechaIda} al ${payload.fechaRegreso}. Mi correo es ${payload.email.trim()}.`;
+};
 
 export const isInsideIframe = () => {
   if (typeof window === "undefined") return false;

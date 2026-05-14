@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, User, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -20,14 +21,67 @@ import {
 } from "@/lib/whatsapp";
 
 const destinos = [
-  "Colombia",
-  "El Caribe",
-  "Norteamérica",
+  "San andres",
+  "Cartagena",
+  "Cancun",
+  "Santa marta",
+  "Panama",
+  "Punta cana",
+  "Peru",
+  "Brasil",
   "Europa",
-  "Asia",
-  "Sudamérica",
   "Otro",
 ];
+
+const codigosPais = [
+  { code: "+57", flag: "🇨🇴", label: "CO" },
+  { code: "+52", flag: "🇲🇽", label: "MX" },
+  { code: "+1", flag: "🇺🇸", label: "US" },
+  { code: "+34", flag: "🇪🇸", label: "ES" },
+  { code: "+54", flag: "🇦🇷", label: "AR" },
+  { code: "+56", flag: "🇨🇱", label: "CL" },
+  { code: "+51", flag: "🇵🇪", label: "PE" },
+  { code: "+593", flag: "🇪🇨", label: "EC" },
+  { code: "+55", flag: "🇧🇷", label: "BR" },
+  { code: "+507", flag: "🇵🇦", label: "PA" },
+];
+
+interface PassengerRowProps {
+  label: string;
+  subtitle: string;
+  value: number;
+  min: number;
+  onChange: (value: number) => void;
+}
+
+function PassengerRow({ label, subtitle, value, min, onChange }: PassengerRowProps) {
+  return (
+    <div className="flex items-center justify-between py-3">
+      <div>
+        <p className="text-sm font-semibold text-foreground">{label}</p>
+        <p className="text-xs text-muted-foreground">{subtitle}</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(min, value - 1))}
+          disabled={value <= min}
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background text-foreground transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <Minus className="h-3.5 w-3.5" />
+        </button>
+        <span className="w-6 text-center text-sm font-bold tabular-nums">{value}</span>
+        <button
+          type="button"
+          onClick={() => onChange(value + 1)}
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background text-foreground transition-colors hover:bg-muted"
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export function QuoteFormSection() {
   const [loading, setLoading] = useState(false);
@@ -36,10 +90,17 @@ export function QuoteFormSection() {
   const [customDestino, setCustomDestino] = useState("");
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
+  const [codigoPais, setCodigoPais] = useState("+57");
   const [telefono, setTelefono] = useState("");
   const [fechaIda, setFechaIda] = useState("");
   const [fechaRegreso, setFechaRegreso] = useState("");
-  const [personas, setPersonas] = useState("");
+
+  const [adultos, setAdultos] = useState(1);
+  const [ninos, setNinos] = useState(0);
+  const [infantes, setInfantes] = useState(0);
+  const [pasajerosOpen, setPasajerosOpen] = useState(false);
+
+  const totalPasajeros = adultos + ninos + infantes;
 
   useEffect(() => {
     const destino = searchParams.get("destino");
@@ -62,14 +123,19 @@ export function QuoteFormSection() {
       return;
     }
 
+    const telefonoCompleto = `${codigoPais}${telefono.trim().replace(/^0+/, "")}`;
+
     const payload = {
       nombre: nombre.trim(),
       email: email.trim(),
-      telefono: telefono.trim(),
+      telefono: telefonoCompleto,
       destino: selectedDestino === "Otro" ? customDestino.trim() : selectedDestino,
       fechaIda,
       fechaRegreso,
-      numeroPersonas: parseInt(personas, 10),
+      numeroPersonas: totalPasajeros,
+      adultos,
+      ninos,
+      infantes,
     };
 
     if (selectedDestino === "Otro" && !payload.destino) {
@@ -94,6 +160,9 @@ export function QuoteFormSection() {
         fecha_ida: payload.fechaIda,
         fecha_regreso: payload.fechaRegreso,
         numero_personas: payload.numeroPersonas,
+        adultos: payload.adultos,
+        ninos: payload.ninos,
+        infantes: payload.infantes,
       });
 
       if (error) throw error;
@@ -104,12 +173,15 @@ export function QuoteFormSection() {
 
       setNombre("");
       setEmail("");
+      setCodigoPais("+57");
       setTelefono("");
       setSelectedDestino("");
       setCustomDestino("");
       setFechaIda("");
       setFechaRegreso("");
-      setPersonas("");
+      setAdultos(1);
+      setNinos(0);
+      setInfantes(0);
 
       openExternalLink(waUrl);
     } catch (err: any) {
@@ -153,7 +225,32 @@ export function QuoteFormSection() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="telefono">Teléfono *</Label>
-                  <Input id="telefono" type="tel" placeholder="+57 300 123 4567" required value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+                  <div className="flex gap-0">
+                    <Select value={codigoPais} onValueChange={setCodigoPais}>
+                      <SelectTrigger className="w-[100px] rounded-r-none border-r-0 shrink-0">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {codigosPais.map((cp) => (
+                          <SelectItem key={cp.code} value={cp.code}>
+                            <span className="flex items-center gap-1.5">
+                              <span>{cp.flag}</span>
+                              <span className="text-xs">{cp.code}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      id="telefono"
+                      type="tel"
+                      placeholder="300 123 4567"
+                      required
+                      value={telefono}
+                      onChange={(e) => setTelefono(e.target.value)}
+                      className="rounded-l-none"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="destino">Destino *</Label>
@@ -190,8 +287,55 @@ export function QuoteFormSection() {
                   <Input id="fecha_regreso" type="date" required value={fechaRegreso} onChange={(e) => setFechaRegreso(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="personas">N° de personas *</Label>
-                  <Input id="personas" type="number" min={1} placeholder="2" required value={personas} onChange={(e) => setPersonas(e.target.value)} />
+                  <Label>Pasajeros *</Label>
+                  <Popover open={pasajerosOpen} onOpenChange={setPasajerosOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-start gap-2 font-normal h-10"
+                      >
+                        <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span>
+                          {totalPasajeros} pasajero{totalPasajeros !== 1 ? "s" : ""}
+                        </span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-72 p-4" align="start">
+                      <PassengerRow
+                        label="Adultos"
+                        subtitle="12 años o más"
+                        value={adultos}
+                        min={1}
+                        onChange={setAdultos}
+                      />
+                      <div className="border-t border-border" />
+                      <PassengerRow
+                        label="Niños"
+                        subtitle="De 2 a 11 años"
+                        value={ninos}
+                        min={0}
+                        onChange={setNinos}
+                      />
+                      <div className="border-t border-border" />
+                      <PassengerRow
+                        label="Infantes"
+                        subtitle="Menor a 2 años"
+                        value={infantes}
+                        min={0}
+                        onChange={setInfantes}
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="w-full mt-3"
+                        onClick={() => setPasajerosOpen(false)}
+                      >
+                        Listo
+                      </Button>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 

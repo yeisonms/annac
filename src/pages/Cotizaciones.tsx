@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { MessageCircle, FileText, User, StickyNote, Plus } from "lucide-react";
+import { formatPassengerBreakdown } from "@/lib/whatsapp";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,6 +34,9 @@ interface Cotizacion {
   fecha_ida: string | null;
   fecha_regreso: string | null;
   numero_personas: number | null;
+  adultos: number | null;
+  ninos: number | null;
+  infantes: number | null;
   estado: string;
   asignado_a: string | null;
   notas: string | null;
@@ -313,11 +317,15 @@ const Cotizaciones = () => {
                         <div className="text-xs text-muted-foreground mt-0.5">
                           {formatFechaCorta(c.fecha_ida)} → {formatFechaCorta(c.fecha_regreso)}
                         </div>
-                        {c.numero_personas && (
+                        {(c.adultos != null || c.ninos != null || c.infantes != null) ? (
+                          <Badge variant="secondary" className="mt-1 text-[10px]">
+                            {formatPassengerBreakdown(c.adultos ?? 0, c.ninos ?? 0, c.infantes ?? 0)}
+                          </Badge>
+                        ) : c.numero_personas ? (
                           <Badge variant="secondary" className="mt-1 text-[10px]">
                             {c.numero_personas} Pax
                           </Badge>
-                        )}
+                        ) : null}
                       </TableCell>
                       <TableCell>
                         <Select value={ESTADOS.includes(c.estado) ? c.estado : (c.estado === 'nuevo' || c.estado === 'Nuevo' ? "Nueva" : "Conversación Inicial")} onValueChange={(val) => updateEstado(c.id, val)}>
@@ -338,7 +346,7 @@ const Cotizaciones = () => {
                       </TableCell>
                       <TableCell>
                         <Select value={c.asignado_a || "unassigned"} onValueChange={(val) => updateAsignado(c.id, val)}>
-                          <SelectTrigger className="h-8 w-[180px] bg-background">
+                          <SelectTrigger className="h-8 w-[180px] bg-background [&>span]:truncate [&>span]:max-w-[150px] [&>span]:block [&>span]:text-left">
                             <SelectValue placeholder="Sin Asignar" />
                           </SelectTrigger>
                           <SelectContent>
@@ -373,7 +381,7 @@ const Cotizaciones = () => {
                             asChild
                           >
                             <a
-                              href={`https://wa.me/${c.telefono.replace(/\D/g, "")}`}
+                              href={`https://wa.me/${c.telefono.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola ${c.nombre}, soy de Annac Viajes. Recibimos tu solicitud de viaje a ${c.destino}${(c.adultos != null || c.ninos != null || c.infantes != null) ? ` (${formatPassengerBreakdown(c.adultos ?? 0, c.ninos ?? 0, c.infantes ?? 0)})` : c.numero_personas ? ` para ${c.numero_personas} personas` : ""}. ¡Estamos preparando tu cotización!`)}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               title="Mensaje por WhatsApp"
