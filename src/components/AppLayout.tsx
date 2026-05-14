@@ -12,7 +12,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0 bg-muted/10">
-          <header className="h-16 flex items-center justify-between border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 shrink-0 sticky top-0 z-10 transition-all duration-200">
+          <header className="flex items-center justify-between border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6 shrink-0 sticky top-0 z-10 transition-all duration-200 pt-[env(safe-area-inset-top)] min-h-[4rem]">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="hover:bg-accent/50 transition-colors" />
               <div className="hidden sm:flex flex-col">
