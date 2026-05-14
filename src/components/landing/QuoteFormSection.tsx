@@ -46,6 +46,11 @@ const codigosPais = [
   { code: "+507", flag: "🇵🇦", label: "PA" },
 ];
 
+const edadOptions = Array.from({ length: 18 }, (_, i) => ({
+  value: String(i),
+  label: i === 0 ? "Menor de 1 año" : `${i} año${i > 1 ? "s" : ""}`,
+}));
+
 interface PassengerRowProps {
   label: string;
   subtitle: string;
@@ -96,11 +101,32 @@ export function QuoteFormSection() {
   const [fechaRegreso, setFechaRegreso] = useState("");
 
   const [adultos, setAdultos] = useState(1);
-  const [ninos, setNinos] = useState(0);
-  const [infantes, setInfantes] = useState(0);
+  const [menores, setMenores] = useState(0);
+  const [edadesMenores, setEdadesMenores] = useState<number[]>([]);
   const [pasajerosOpen, setPasajerosOpen] = useState(false);
 
-  const totalPasajeros = adultos + ninos + infantes;
+  const totalPasajeros = adultos + menores;
+
+  // Keep edadesMenores array in sync with menores count
+  const handleMenoresChange = (newCount: number) => {
+    setMenores(newCount);
+    setEdadesMenores((prev) => {
+      if (newCount > prev.length) {
+        // Add new entries with default age 0
+        return [...prev, ...Array(newCount - prev.length).fill(0)];
+      }
+      // Trim excess entries
+      return prev.slice(0, newCount);
+    });
+  };
+
+  const updateEdadMenor = (index: number, edad: number) => {
+    setEdadesMenores((prev) => {
+      const updated = [...prev];
+      updated[index] = edad;
+      return updated;
+    });
+  };
 
   useEffect(() => {
     const destino = searchParams.get("destino");
@@ -134,8 +160,8 @@ export function QuoteFormSection() {
       fechaRegreso,
       numeroPersonas: totalPasajeros,
       adultos,
-      ninos,
-      infantes,
+      menores,
+      edadesMenores,
     };
 
     if (selectedDestino === "Otro" && !payload.destino) {
@@ -161,8 +187,9 @@ export function QuoteFormSection() {
         fecha_regreso: payload.fechaRegreso,
         numero_personas: payload.numeroPersonas,
         adultos: payload.adultos,
-        ninos: payload.ninos,
-        infantes: payload.infantes,
+        ninos: payload.menores,
+        infantes: 0,
+        edades_menores: payload.edadesMenores.length > 0 ? payload.edadesMenores : null,
       });
 
       if (error) throw error;
@@ -180,8 +207,8 @@ export function QuoteFormSection() {
       setFechaIda("");
       setFechaRegreso("");
       setAdultos(1);
-      setNinos(0);
-      setInfantes(0);
+      setMenores(0);
+      setEdadesMenores([]);
 
       openExternalLink(waUrl);
     } catch (err: any) {
@@ -302,30 +329,53 @@ export function QuoteFormSection() {
                         </span>
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-72 p-4" align="start">
+                    <PopoverContent className="w-80 p-4" align="start">
                       <PassengerRow
                         label="Adultos"
-                        subtitle="12 años o más"
+                        subtitle="Desde 18 años"
                         value={adultos}
                         min={1}
                         onChange={setAdultos}
                       />
                       <div className="border-t border-border" />
                       <PassengerRow
-                        label="Niños"
-                        subtitle="De 2 a 11 años"
-                        value={ninos}
+                        label="Menores"
+                        subtitle="Hasta 17 años"
+                        value={menores}
                         min={0}
-                        onChange={setNinos}
+                        onChange={handleMenoresChange}
                       />
-                      <div className="border-t border-border" />
-                      <PassengerRow
-                        label="Infantes"
-                        subtitle="Menor a 2 años"
-                        value={infantes}
-                        min={0}
-                        onChange={setInfantes}
-                      />
+
+                      {menores > 0 && (
+                        <div className="mt-2 pt-3 border-t border-border space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Edad de cada menor
+                          </p>
+                          {edadesMenores.map((edad, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <Label className="text-xs text-muted-foreground w-24 shrink-0">
+                                Menor {idx + 1}
+                              </Label>
+                              <Select
+                                value={String(edad)}
+                                onValueChange={(v) => updateEdadMenor(idx, Number(v))}
+                              >
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {edadOptions.map((opt) => (
+                                    <SelectItem key={opt.value} value={opt.value}>
+                                      {opt.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
                       <Button
                         type="button"
                         size="sm"

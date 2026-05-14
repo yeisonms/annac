@@ -37,6 +37,7 @@ interface Cotizacion {
   adultos: number | null;
   ninos: number | null;
   infantes: number | null;
+  edades_menores: number[] | null;
   estado: string;
   asignado_a: string | null;
   notas: string | null;
@@ -317,9 +318,9 @@ const Cotizaciones = () => {
                         <div className="text-xs text-muted-foreground mt-0.5">
                           {formatFechaCorta(c.fecha_ida)} → {formatFechaCorta(c.fecha_regreso)}
                         </div>
-                        {(c.adultos != null || c.ninos != null || c.infantes != null) ? (
+                        {(c.adultos != null || c.ninos != null) ? (
                           <Badge variant="secondary" className="mt-1 text-[10px]">
-                            {formatPassengerBreakdown(c.adultos ?? 0, c.ninos ?? 0, c.infantes ?? 0)}
+                            {formatPassengerBreakdown(c.adultos ?? 0, (c.ninos ?? 0) + (c.infantes ?? 0), c.edades_menores)}
                           </Badge>
                         ) : c.numero_personas ? (
                           <Badge variant="secondary" className="mt-1 text-[10px]">
@@ -381,7 +382,7 @@ const Cotizaciones = () => {
                             asChild
                           >
                             <a
-                              href={`https://wa.me/${c.telefono.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola ${c.nombre}, soy de Annac Viajes. Recibimos tu solicitud de viaje a ${c.destino}${(c.adultos != null || c.ninos != null || c.infantes != null) ? ` (${formatPassengerBreakdown(c.adultos ?? 0, c.ninos ?? 0, c.infantes ?? 0)})` : c.numero_personas ? ` para ${c.numero_personas} personas` : ""}. ¡Estamos preparando tu cotización!`)}`}
+                              href={`https://wa.me/${c.telefono.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola ${c.nombre}, soy de Annac Viajes. Recibimos tu solicitud de viaje a ${c.destino}${(c.adultos != null || c.ninos != null) ? ` (${formatPassengerBreakdown(c.adultos ?? 0, (c.ninos ?? 0) + (c.infantes ?? 0), c.edades_menores)})` : c.numero_personas ? ` para ${c.numero_personas} personas` : ""}. ¡Estamos preparando tu cotización!`)}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               title="Mensaje por WhatsApp"
