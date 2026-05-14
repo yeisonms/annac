@@ -2,7 +2,7 @@
   "name": "Annac Viajes a tu Medida",
   "short_name": "Annac Viajes",
   "description": "Viajes personalizados, sin estrés y ajustados a tu presupuesto. Más de 10 años haciendo sueños realidad.",
-  "start_url": "/",
+  "start_url": "/login",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
