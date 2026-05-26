@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Loader2, Eye, Pencil } from "lucide-react";
+import { Plus, Trash2, Loader2, Eye, Pencil, Filter } from "lucide-react";
 import { toast } from "sonner";
 import VentaDetailSheet from "@/components/VentaDetailSheet";
 import { ReciboDialog, type ReciboData } from "@/components/ReciboDialog";
@@ -22,9 +22,16 @@ interface ClienteOption {
   celular: string | null;
 }
 
+interface PerfilOption {
+  id: string;
+  nombre_completo: string | null;
+  email: string | null;
+}
+
 interface VentaRow {
   id: string;
   cliente_id: string;
+  agente_id: string | null;
   destino: string;
   fecha_venta: string | null;
   fecha_inicio_viaje: string | null;
@@ -55,12 +62,14 @@ const emptyForm = {
   metodo_pago_anticipo: "Transferencia",
   costo_por_proveedor: 0,
   plazo_pago_cliente: "",
+  agente_id: "",
 };
 
 export default function Ventas() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [ventas, setVentas] = useState<VentaRow[]>([]);
   const [clientes, setClientes] = useState<ClienteOption[]>([]);
+  const [perfiles, setPerfiles] = useState<PerfilOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
@@ -68,6 +77,7 @@ export default function Ventas() {
   const [editingVentaId, setEditingVentaId] = useState<string | null>(null);
   const [detailVenta, setDetailVenta] = useState<VentaRow | null>(null);
   const [recibo, setRecibo] = useState<ReciboData | null>(null);
+  const [filtroAgente, setFiltroAgente] = useState<string>("todos");
 
   const isEditing = !!editingVentaId;
 
@@ -111,7 +121,7 @@ export default function Ventas() {
     setLoading(true);
     const { data, error } = await supabase
       .from("ventas")
-      .select("id, cliente_id, destino, fecha_venta, fecha_inicio_viaje, fecha_fin_viaje, codigo_reserva_aerea, codigo_reserva_hotel, receptivos_programa, valor_total_venta, costo_por_proveedor, ingreso_agencia, saldo_cliente, estado_pago_cliente, plazo_pago_cliente, clientes(nombre_cliente)")
+      .select("id, cliente_id, agente_id, destino, fecha_venta, fecha_inicio_viaje, fecha_fin_viaje, codigo_reserva_aerea, codigo_reserva_hotel, receptivos_programa, valor_total_venta, costo_por_proveedor, ingreso_agencia, saldo_cliente, estado_pago_cliente, plazo_pago_cliente, clientes(nombre_cliente)")
       .order("fecha_venta", { ascending: false });
 
     if (error) {
@@ -130,10 +140,28 @@ export default function Ventas() {
     if (data) setClientes(data);
   }, []);
 
+  const fetchPerfiles = useCallback(async () => {
+    if (!isAdmin) return;
+    const { data } = await supabase
+      .from("perfiles")
+      .select("id, nombre_completo, email")
+      .order("nombre_completo");
+    if (data) setPerfiles(data);
+  }, [isAdmin]);
+
   useEffect(() => {
     fetchVentas();
     fetchClientes();
-  }, [fetchVentas, fetchClientes]);
+    fetchPerfiles();
+  }, [fetchVentas, fetchClientes, fetchPerfiles]);
+
+  const getPerfilNombre = (id: string | null) => {
+    if (!id) return "Sin asignar";
+    const p = perfiles.find((p) => p.id === id);
+    if (!p) return `Asesor (${id.substring(0, 4)})`;
+    const name = p.nombre_completo || p.email || "Asesor";
+    return name.split(" ")[0]; // Devuelve solo el primer nombre
+  };
 
   const handleSave = async () => {
     if (!form.cliente_id || !form.destino) {
@@ -141,6 +169,8 @@ export default function Ventas() {
       return;
     }
     setSaving(true);
+
+    const agenteIdFinal = isAdmin && form.agente_id ? form.agente_id : user?.id;
 
     const payloadVenta = {
       cliente_id: form.cliente_id,
@@ -154,6 +184,7 @@ export default function Ventas() {
       valor_total_venta: form.valor_total_venta,
       costo_por_proveedor: form.costo_por_proveedor,
       plazo_pago_cliente: form.plazo_pago_cliente || null,
+      agente_id: agenteIdFinal,
     };
 
     if (isEditing) {
@@ -200,6 +231,7 @@ export default function Ventas() {
             monto_abonado: form.anticipo,
             metodo_pago: form.metodo_pago_anticipo,
             fecha_pago: new Date().toISOString().split("T")[0],
+            agente_id: agenteIdFinal,
           });
 
         if (errorPago) {
@@ -244,6 +276,10 @@ export default function Ventas() {
 
   const getClienteName = (v: VentaRow) =>
     v.clientes?.nombre_cliente ?? "Sin cliente";
+
+  const filteredVentas = isAdmin
+    ? ventas.filter((v) => filtroAgente === "todos" || v.agente_id === filtroAgente)
+    : ventas.filter((v) => v.agente_id === user?.id);
 
   return (
     <div className="space-y-4">
@@ -340,6 +376,20 @@ export default function Ventas() {
                 <Label>Plazo Pago Cliente (para el saldo restante)</Label>
                 <Input type="date" value={form.plazo_pago_cliente} onChange={(e) => setForm((p) => ({ ...p, plazo_pago_cliente: e.target.value }))} />
               </div>
+              {isAdmin && (
+                <div className="grid gap-1.5">
+                  <Label>Asignar a Agente</Label>
+                  <Select value={form.agente_id || "auto"} onValueChange={(v) => setForm((p) => ({ ...p, agente_id: v === "auto" ? "" : v }))}>
+                    <SelectTrigger><SelectValue placeholder="Auto (yo mismo)" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">Auto (mi usuario)</SelectItem>
+                      {perfiles.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{getPerfilNombre(p.id)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button onClick={handleSave} disabled={saving}>
@@ -350,6 +400,23 @@ export default function Ventas() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {isAdmin && (
+        <div className="flex items-center gap-2 bg-card/60 p-3 rounded-xl border border-border/50">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={filtroAgente} onValueChange={setFiltroAgente}>
+            <SelectTrigger className="w-[220px] bg-background">
+              <SelectValue placeholder="Filtrar por agente" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos los Agentes</SelectItem>
+              {perfiles.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{getPerfilNombre(p.id)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <Card>
         <CardContent className="p-0">
@@ -365,6 +432,7 @@ export default function Ventas() {
                   {isAdmin && <TableHead className="text-right">Ingreso Agencia</TableHead>}
                   <TableHead className="text-right">Saldo</TableHead>
                    <TableHead>Estado</TableHead>
+                   {isAdmin && <TableHead>Agente</TableHead>}
                    <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -372,19 +440,20 @@ export default function Ventas() {
                 {loading ? (
                   Array.from({ length: 4 }).map((_, i) => (
                     <TableRow key={i}>
-                      {Array.from({ length: isAdmin ? 9 : 7 }).map((_, j) => (
+                      {Array.from({ length: isAdmin ? 10 : 7 }).map((_, j) => (
                         <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                       ))}
                     </TableRow>
                   ))
-                ) : ventas.length === 0 ? (
+                ) : filteredVentas.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 9 : 7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={isAdmin ? 10 : 7} className="text-center py-8 text-muted-foreground">
                       No hay reservas registradas
                     </TableCell>
                   </TableRow>
                 ) : (
-                  ventas.map((v) => (
+                  filteredVentas
+                    .map((v) => (
                     <TableRow key={v.id}>
                       <TableCell className="font-medium">{getClienteName(v)}</TableCell>
                       <TableCell>{v.destino}</TableCell>
@@ -404,6 +473,7 @@ export default function Ventas() {
                           {v.estado_pago_cliente ?? "Pendiente"}
                         </Badge>
                       </TableCell>
+                      {isAdmin && <TableCell className="text-sm text-muted-foreground">{getPerfilNombre(v.agente_id)}</TableCell>}
                       <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Button variant="ghost" size="icon" onClick={() => setDetailVenta(v)} title="Ver detalles">

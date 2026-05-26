@@ -98,7 +98,7 @@ const Cotizaciones = () => {
   const [creating, setCreating] = useState(false);
 
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   const openNotas = (c: Cotizacion) => {
     setSelectedCotizacion(c);
@@ -139,7 +139,9 @@ const Cotizaciones = () => {
       fecha_regreso: createForm.fecha_regreso || null,
       numero_personas: createForm.numero_personas ? Number(createForm.numero_personas) : null,
       estado: createForm.estado,
-      asignado_a: createForm.asignado_a === "unassigned" ? null : createForm.asignado_a,
+      asignado_a: isAdmin
+        ? (createForm.asignado_a === "unassigned" ? null : createForm.asignado_a)
+        : user?.id ?? null,
       notas: createForm.notas || null
     };
 
@@ -155,11 +157,16 @@ const Cotizaciones = () => {
     setCreating(false);
   };
 
+  const fetchPerfiles = async () => {
+    const { data } = await supabase.from("perfiles").select("id, nombre_completo, email").order("nombre_completo");
+    if (data) setPerfiles(data);
+  };
+
   const fetchCotizacionesAndPerfiles = async () => {
     setLoading(true);
-    const [resCot, resPerf] = await Promise.all([
+    const [resCot] = await Promise.all([
       supabase.from("cotizaciones").select("*").order("created_at", { ascending: false }),
-      supabase.from("perfiles").select("*")
+      fetchPerfiles()
     ]);
     
     if (resCot.error) {
@@ -168,9 +175,6 @@ const Cotizaciones = () => {
       setCotizaciones(resCot.data || []);
     }
     
-    if (!resPerf.error) {
-      setPerfiles(resPerf.data || []);
-    }
     setLoading(false);
   };
 
@@ -199,6 +203,14 @@ const Cotizaciones = () => {
     }
   };
 
+  const getPerfilNombre = (id: string | null) => {
+    if (!id) return "Sin Asignar";
+    const p = perfiles.find(x => x.id === id);
+    if (!p) return `Asesor (${id.substring(0, 4)})`;
+    const name = p.nombre_completo || p.email || "Asesor";
+    return name.split(" ")[0];
+  };
+
   const formatFecha = (dateStr: string) => {
     try {
       return format(new Date(dateStr), "dd MMM yyyy", { locale: es });
@@ -217,12 +229,13 @@ const Cotizaciones = () => {
   };
 
   const filteredCotizaciones = cotizaciones.filter((c) => {
-    const matchAsignado = filtroAsignado === "mis" ? c.asignado_a === user?.id : true;
+    const isMis = filtroAsignado === "mis" || !isAdmin;
+    const matchAsignado = isMis ? c.asignado_a === user?.id : true;
     const matchEstado = filtroEstado === "todos" ? true : c.estado === filtroEstado;
     return matchAsignado && matchEstado;
   });
 
-  const nuevasCount = cotizaciones.filter((c) => c.estado === "Nuevas" || c.estado === "nuevo").length;
+  const nuevasCount = filteredCotizaciones.filter((c) => c.estado === "Nuevas" || c.estado === "nuevo").length;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -244,17 +257,19 @@ const Cotizaciones = () => {
       </div>
 
       <div className="flex flex-col sm:flex-row items-center gap-3 bg-card/60 p-3 rounded-2xl border border-border/50 shadow-sm">
-        <div className="flex items-center gap-2">
-          <Select value={filtroAsignado} onValueChange={(v: "todas" | "mis") => setFiltroAsignado(v)}>
-            <SelectTrigger className="w-[180px] bg-background">
-              <SelectValue placeholder="Filtrar asignación" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas las Cotizaciones</SelectItem>
-              <SelectItem value="mis">Mis Cotizaciones</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {isAdmin && (
+          <div className="flex items-center gap-2">
+            <Select value={filtroAsignado} onValueChange={(v: "todas" | "mis") => setFiltroAsignado(v)}>
+              <SelectTrigger className="w-[180px] bg-background">
+                <SelectValue placeholder="Filtrar asignación" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas las Cotizaciones</SelectItem>
+                <SelectItem value="mis">Mis Cotizaciones</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <Select value={filtroEstado} onValueChange={setFiltroEstado}>
             <SelectTrigger className="w-[180px] bg-background">
@@ -298,7 +313,7 @@ const Cotizaciones = () => {
                     <TableHead>Cliente</TableHead>
                     <TableHead>Viaje</TableHead>
                     <TableHead>Estado</TableHead>
-                    <TableHead>Asignado A</TableHead>
+                    {isAdmin && <TableHead>Asignado A</TableHead>}
                     <TableHead className="text-right">Contacto</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -345,6 +360,7 @@ const Cotizaciones = () => {
                           </SelectContent>
                         </Select>
                       </TableCell>
+                      {isAdmin && (
                       <TableCell>
                         <Select value={c.asignado_a || "unassigned"} onValueChange={(val) => updateAsignado(c.id, val)}>
                           <SelectTrigger className="h-8 w-[180px] bg-background [&>span]:truncate [&>span]:max-w-[150px] [&>span]:block [&>span]:text-left">
@@ -356,13 +372,14 @@ const Cotizaciones = () => {
                               <SelectItem key={p.id} value={p.id}>
                                 <div className="flex items-center gap-2">
                                   <User className="h-3 w-3 text-muted-foreground" />
-                                  {p.nombre || p.nombre_completo || p.full_name || p.email || p.correo || `Asesor (${p.id.substring(0, 4)})`}
+                                  {getPerfilNombre(p.id)}
                                 </div>
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </TableCell>
+                      )}
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
@@ -469,6 +486,7 @@ const Cotizaciones = () => {
               <Label>Cant. Personas</Label>
               <Input type="number" min="1" value={createForm.numero_personas} onChange={e => setCreateForm(p => ({ ...p, numero_personas: e.target.value }))} placeholder="Ej. 2" />
             </div>
+            {isAdmin && (
             <div className="grid gap-1.5">
               <Label>Asignar A</Label>
               <Select value={createForm.asignado_a} onValueChange={(v) => setCreateForm(p => ({ ...p, asignado_a: v }))}>
@@ -478,11 +496,12 @@ const Cotizaciones = () => {
                 <SelectContent>
                   <SelectItem value="unassigned">Sin Asignar</SelectItem>
                   {perfiles.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.nombre || p.nombre_completo || p.full_name || p.email || p.correo || `Asesor (${p.id.substring(0,4)})`}</SelectItem>
+                    <SelectItem key={p.id} value={p.id}>{getPerfilNombre(p.id)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+            )}
             <div className="grid gap-1.5 md:col-span-2">
               <Label>Notas Iniciales</Label>
               <Textarea value={createForm.notas} onChange={e => setCreateForm(p => ({ ...p, notas: e.target.value }))} placeholder="Ej. Contactó por Facebook, quiere algo de lujo..." className="resize-none h-20" />
