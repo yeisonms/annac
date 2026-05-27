@@ -139,15 +139,20 @@ export default function ProveedoresPage() {
   const fetchVentasOptions = useCallback(async () => {
     const { data } = await supabase
       .from("ventas")
-      .select("id, destino, clientes(nombre_cliente)")
+      .select("id, agente_id, destino, clientes(nombre_cliente)")
       .order("fecha_venta", { ascending: false });
+
+    const filteredData = isAdmin 
+      ? (data || [])
+      : (data || []).filter((v: any) => v.agente_id === user?.id);
+
     setVentasOptions(
-      (data || []).map((v: any) => ({
+      filteredData.map((v: any) => ({
         id: v.id,
         label: `${v.clientes?.nombre_cliente || "Sin cliente"} — ${v.destino}`,
       }))
     );
-  }, []);
+  }, [isAdmin, user?.id]);
 
   useEffect(() => { fetchProveedores(); fetchCuentas(); fetchVentasOptions(); fetchPerfiles(); }, [fetchProveedores, fetchCuentas, fetchVentasOptions, fetchPerfiles]);
 
