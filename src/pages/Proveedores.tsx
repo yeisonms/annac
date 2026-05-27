@@ -22,12 +22,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 // --- Types ---
 interface ProveedorRow {
   id: string;
+  agente_id: string | null;
   nombre: string;
   tipo_servicio: string | null;
 }
 
 interface CuentaPorPagarRow {
   id: string;
+  agente_id: string | null;
   venta_id: string;
   proveedor_id: string;
   monto_deuda: number;
@@ -47,8 +49,29 @@ const semaforoBadge = (fecha: string) => {
   return <Badge className={variants[status]}>{fecha}</Badge>;
 };
 
+interface PerfilOption {
+  id: string;
+  nombre_completo: string | null;
+  email: string | null;
+}
+
 export default function ProveedoresPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
+  const [perfiles, setPerfiles] = useState<PerfilOption[]>([]);
+
+  const fetchPerfiles = useCallback(async () => {
+    if (!isAdmin) return;
+    const { data } = await supabase.from("perfiles").select("id, nombre_completo, email").order("nombre_completo");
+    if (data) setPerfiles(data);
+  }, [isAdmin]);
+
+  const getPerfilNombre = (id: string | null) => {
+    if (!id) return "Sin asignar";
+    const p = perfiles.find((p) => p.id === id);
+    if (!p) return `Asesor (${id.substring(0, 4)})`;
+    const name = p.nombre_completo || p.email || "Asesor";
+    return name.split(" ")[0];
+  };
 
   // --- Proveedores CRUD ---
   const [proveedores, setProveedores] = useState<ProveedorRow[]>([]);
@@ -61,7 +84,7 @@ export default function ProveedoresPage() {
     setLoadingProv(true);
     const { data, error } = await supabase
       .from("proveedores")
-      .select("id, nombre, tipo_servicio")
+      .select("id, agente_id, nombre, tipo_servicio")
       .order("nombre");
     if (error) toast.error("Error cargando proveedores: " + error.message);
     else setProveedores(data || []);
@@ -74,6 +97,7 @@ export default function ProveedoresPage() {
     const { error } = await supabase.from("proveedores").insert({
       nombre: provForm.nombre,
       tipo_servicio: provForm.tipo_servicio || null,
+      agente_id: user?.id,
     });
     if (error) toast.error("Error: " + error.message);
     else { toast.success("Proveedor creado"); setProvForm({ nombre: "", tipo_servicio: "" }); setOpenProv(false); fetchProveedores(); }
@@ -105,7 +129,7 @@ export default function ProveedoresPage() {
     setLoadingCuentas(true);
     const { data, error } = await supabase
       .from("cuentas_por_pagar")
-      .select("id, venta_id, proveedor_id, monto_deuda, plazo_pago_proveedor, estado_pago, proveedores(nombre), ventas(destino, clientes(nombre_cliente))")
+      .select("id, agente_id, venta_id, proveedor_id, monto_deuda, plazo_pago_proveedor, estado_pago, proveedores(nombre), ventas(destino, clientes(nombre_cliente))")
       .order("plazo_pago_proveedor", { ascending: true });
     if (error) toast.error("Error cargando cuentas: " + error.message);
     else setCuentas((data as unknown as CuentaPorPagarRow[]) || []);
@@ -115,17 +139,22 @@ export default function ProveedoresPage() {
   const fetchVentasOptions = useCallback(async () => {
     const { data } = await supabase
       .from("ventas")
-      .select("id, destino, clientes(nombre_cliente)")
+      .select("id, agente_id, destino, clientes(nombre_cliente)")
       .order("fecha_venta", { ascending: false });
+
+    const filteredData = isAdmin 
+      ? (data || [])
+      : (data || []).filter((v: any) => v.agente_id === user?.id);
+
     setVentasOptions(
-      (data || []).map((v: any) => ({
+      filteredData.map((v: any) => ({
         id: v.id,
         label: `${v.clientes?.nombre_cliente || "Sin cliente"} — ${v.destino}`,
       }))
     );
-  }, []);
+  }, [isAdmin, user?.id]);
 
-  useEffect(() => { fetchProveedores(); fetchCuentas(); fetchVentasOptions(); }, [fetchProveedores, fetchCuentas, fetchVentasOptions]);
+  useEffect(() => { fetchProveedores(); fetchCuentas(); fetchVentasOptions(); fetchPerfiles(); }, [fetchProveedores, fetchCuentas, fetchVentasOptions, fetchPerfiles]);
 
   const handleSaveCuenta = async () => {
     if (!cuentaForm.venta_id || !cuentaForm.proveedor_id || !cuentaForm.monto_deuda) {
@@ -141,6 +170,7 @@ export default function ProveedoresPage() {
         ? format(cuentaForm.plazo_pago_proveedor, "yyyy-MM-dd")
         : null,
       estado_pago: "PENDIENTE",
+      agente_id: user?.id,
     });
     if (error) {
       toast.error("Error al guardar: " + error.message);
@@ -162,7 +192,15 @@ export default function ProveedoresPage() {
     else { toast.success("Cuenta marcada como pagada"); fetchCuentas(); }
   };
 
-  const pendientes = cuentas.filter((c) => c.estado_pago !== "PAGADO" && c.estado_pago !== "Pagado");
+  const filteredCuentas = isAdmin
+    ? cuentas
+    : cuentas.filter((c) => c.agente_id === user?.id);
+
+  const pendientes = filteredCuentas.filter((c) => c.estado_pago !== "PAGADO" && c.estado_pago !== "Pagado");
+
+  const filteredProveedores = isAdmin
+    ? proveedores
+    : proveedores.filter((p) => p.agente_id === user?.id);
 
   return (
     <div className="space-y-4">
@@ -247,6 +285,7 @@ export default function ProveedoresPage() {
                       <TableHead className="text-right">Monto Deuda</TableHead>
                       <TableHead>Plazo de Pago</TableHead>
                       <TableHead>Estado</TableHead>
+                      {isAdmin && <TableHead>Agente</TableHead>}
                       <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -254,14 +293,16 @@ export default function ProveedoresPage() {
                     {loadingCuentas ? (
                       Array.from({ length: 4 }).map((_, i) => (
                         <TableRow key={i}>
-                          {Array.from({ length: 7 }).map((_, j) => (
+                          {Array.from({ length: isAdmin ? 8 : 7 }).map((_, j) => (
                             <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                           ))}
                         </TableRow>
                       ))
                     ) : pendientes.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">No hay cuentas pendientes</TableCell>
+                        <TableCell colSpan={isAdmin ? 8 : 7} className="text-center py-8 text-muted-foreground">
+                          No hay cuentas por pagar pendientes
+                        </TableCell>
                       </TableRow>
                     ) : (
                       pendientes.map((c) => (
@@ -272,6 +313,7 @@ export default function ProveedoresPage() {
                           <TableCell className="text-right font-semibold">{formatCurrency(c.monto_deuda)}</TableCell>
                           <TableCell>{c.plazo_pago_proveedor ? semaforoBadge(c.plazo_pago_proveedor) : "—"}</TableCell>
                           <TableCell><Badge variant="secondary">{c.estado_pago ?? "Pendiente"}</Badge></TableCell>
+                          {isAdmin && <TableCell className="text-sm text-muted-foreground">{getPerfilNombre(c.agente_id)}</TableCell>}
                           <TableCell className="text-right">
                             <Button size="sm" variant="outline" onClick={() => handleMarcarPagado(c.id)}>
                               <CheckCircle className="h-4 w-4 mr-1" /> Marcar Pagado
@@ -317,7 +359,8 @@ export default function ProveedoresPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nombre</TableHead>
-                      <TableHead>Tipo de Servicio</TableHead>
+                      <TableHead>Servicio</TableHead>
+                      {isAdmin && <TableHead>Creado por</TableHead>}
                       {isAdmin && <TableHead className="text-right">Acciones</TableHead>}
                     </TableRow>
                   </TableHeader>
@@ -325,20 +368,24 @@ export default function ProveedoresPage() {
                     {loadingProv ? (
                       Array.from({ length: 3 }).map((_, i) => (
                         <TableRow key={i}>
-                          <TableCell><Skeleton className="h-4 w-full" /></TableCell>
-                          <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                          {isAdmin && <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>}
                           {isAdmin && <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell>}
                         </TableRow>
                       ))
-                    ) : proveedores.length === 0 ? (
+                    ) : filteredProveedores.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={isAdmin ? 3 : 2} className="text-center text-muted-foreground py-8">No hay proveedores registrados</TableCell>
+                        <TableCell colSpan={isAdmin ? 4 : 2} className="text-center py-8 text-muted-foreground">
+                          No hay proveedores registrados
+                        </TableCell>
                       </TableRow>
                     ) : (
-                      proveedores.map((p) => (
+                      filteredProveedores.map((p) => (
                         <TableRow key={p.id}>
                           <TableCell className="font-medium">{p.nombre}</TableCell>
                           <TableCell>{p.tipo_servicio ?? "—"}</TableCell>
+                          {isAdmin && <TableCell className="text-sm text-muted-foreground">{getPerfilNombre(p.agente_id)}</TableCell>}
                           {isAdmin && (
                             <TableCell className="text-right">
                               <Button variant="ghost" size="icon" onClick={() => handleDeleteProv(p.id)}>
