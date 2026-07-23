@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, Shield, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FooterAttribution } from "@/components/FooterAttribution";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { role, isAdmin, user, signOut } = useAuth();
@@ -48,6 +49,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </header>
           <main className="flex-1 overflow-auto p-4 md:p-8">{children}</main>
+          <FooterAttribution />
         </div>
       </div>
     </SidebarProvider>

@@ -12,6 +12,7 @@ import { PaymentMethodsSection } from "@/components/landing/PaymentMethodsSectio
 import { LatestBlogsSection } from "@/components/landing/LatestBlogsSection";
 import { VideoSection } from "@/components/landing/VideoSection";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { FooterAttribution } from "@/components/FooterAttribution";
 
 const LandingPage = () => {
   return (
@@ -29,6 +30,7 @@ const LandingPage = () => {
       <LatestBlogsSection />
       <FaqSection />
       <LandingFooter />
+      <FooterAttribution />
 
       {/* Floating WhatsApp Button */}
       <a
