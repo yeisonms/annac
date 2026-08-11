@@ -13,13 +13,24 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Loader2, Eye, Pencil, Filter, Search, Calendar as CalendarIcon, ArrowUpDown, ArrowDown, ArrowUp, TrendingUp, TrendingDown, MapPin, CreditCard, Wallet, X } from "lucide-react";
+import { Plus, Trash2, Loader2, Eye, Pencil, Filter, Search, Calendar as CalendarIcon, ArrowUpDown, ArrowDown, ArrowUp, TrendingUp, TrendingDown, MapPin, CreditCard, Wallet, X, Check, ChevronsUpDown } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import VentaDetailSheet from "@/components/VentaDetailSheet";
 import { ReciboDialog, type ReciboData } from "@/components/ReciboDialog";
+
+const normalizeDestino = (str: string) => {
+  if (!str) return "";
+  return str
+    .trim()
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+};
 
 interface ClienteOption {
   id: string;
@@ -92,6 +103,8 @@ export default function Ventas() {
   const [detailVenta, setDetailVenta] = useState<VentaRow | null>(null);
   const [recibo, setRecibo] = useState<ReciboData | null>(null);
   const [filtroAgente, setFiltroAgente] = useState<string>("todos");
+  const [openDestino, setOpenDestino] = useState(false);
+  const [searchDestino, setSearchDestino] = useState("");
   
   // Dashboard states
   const [searchTerm, setSearchTerm] = useState("");
@@ -339,10 +352,11 @@ export default function Ventas() {
     setSaving(true);
 
     const agenteIdFinal = isAdmin && form.agente_id ? form.agente_id : user?.id;
+    const destinoNormalizado = normalizeDestino(form.destino);
 
     const payloadVenta = {
       cliente_id: form.cliente_id,
-      destino: form.destino,
+      destino: destinoNormalizado,
       fecha_venta: form.fecha_venta || null,
       fecha_inicio_viaje: form.fecha_inicio_viaje || null,
       fecha_fin_viaje: form.fecha_fin_viaje || null,
@@ -495,7 +509,82 @@ export default function Ventas() {
               </div>
               <div className="grid gap-1.5">
                 <Label>Destino *</Label>
-                <Input value={form.destino} onChange={(e) => setForm((p) => ({ ...p, destino: e.target.value }))} />
+                <Popover open={openDestino} onOpenChange={setOpenDestino}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openDestino}
+                      className="justify-between font-normal"
+                    >
+                      {form.destino || "Seleccionar o crear destino..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[300px] p-0" align="start">
+                    <Command>
+                      <CommandInput 
+                        placeholder="Buscar destino..." 
+                        value={searchDestino}
+                        onValueChange={setSearchDestino}
+                      />
+                      <CommandList>
+                        <CommandEmpty>
+                          {searchDestino.trim() !== "" ? (
+                            <Button
+                              variant="ghost"
+                              className="w-full justify-start text-sm px-2 py-1.5 h-auto font-normal"
+                              onClick={() => {
+                                setForm((prev) => ({ ...prev, destino: searchDestino.trim() }));
+                                setOpenDestino(false);
+                                setSearchDestino("");
+                              }}
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              Crear "{searchDestino.trim()}"
+                            </Button>
+                          ) : (
+                            "No se encontraron destinos."
+                          )}
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {destinosUnicos.map((destino) => (
+                            <CommandItem
+                              key={destino}
+                              value={destino}
+                              onSelect={() => {
+                                setForm((prev) => ({ ...prev, destino: destino }));
+                                setOpenDestino(false);
+                                setSearchDestino("");
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  form.destino === destino ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {destino}
+                            </CommandItem>
+                          ))}
+                          {searchDestino.trim() !== "" && !destinosUnicos.some(d => d.toLowerCase() === searchDestino.trim().toLowerCase()) && (
+                            <CommandItem
+                              value={`crear_${searchDestino}`}
+                              onSelect={() => {
+                                setForm((prev) => ({ ...prev, destino: searchDestino.trim() }));
+                                setOpenDestino(false);
+                                setSearchDestino("");
+                              }}
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              Crear "{searchDestino.trim()}"
+                            </CommandItem>
+                          )}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="grid gap-1.5">
                 <Label>Fecha de Venta</Label>
