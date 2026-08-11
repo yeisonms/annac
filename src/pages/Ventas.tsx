@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/data/mockData";
@@ -7,12 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Loader2, Eye, Pencil, Filter } from "lucide-react";
+import { Plus, Trash2, Loader2, Eye, Pencil, Filter, Search, Calendar as CalendarIcon, ArrowUpDown, ArrowDown, ArrowUp, TrendingUp, TrendingDown, MapPin, CreditCard, Wallet, X } from "lucide-react";
+import { format, subDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { DateRange } from "react-day-picker";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import VentaDetailSheet from "@/components/VentaDetailSheet";
 import { ReciboDialog, type ReciboData } from "@/components/ReciboDialog";
 
@@ -26,6 +31,11 @@ interface PerfilOption {
   id: string;
   nombre_completo: string | null;
   email: string | null;
+}
+
+interface ProveedorOption {
+  id: string;
+  nombre: string;
 }
 
 interface VentaRow {
@@ -61,15 +71,19 @@ const emptyForm = {
   anticipo: 0,
   metodo_pago_anticipo: "Transferencia",
   costo_por_proveedor: 0,
+  proveedor_id: "none",
+  plazo_pago_proveedor: "",
   plazo_pago_cliente: "",
   agente_id: "",
 };
 
 export default function Ventas() {
   const { isAdmin, user } = useAuth();
+  const queryClient = useQueryClient();
   const [ventas, setVentas] = useState<VentaRow[]>([]);
   const [clientes, setClientes] = useState<ClienteOption[]>([]);
   const [perfiles, setPerfiles] = useState<PerfilOption[]>([]);
+  const [proveedores, setProveedores] = useState<ProveedorOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
@@ -78,8 +92,151 @@ export default function Ventas() {
   const [detailVenta, setDetailVenta] = useState<VentaRow | null>(null);
   const [recibo, setRecibo] = useState<ReciboData | null>(null);
   const [filtroAgente, setFiltroAgente] = useState<string>("todos");
+  
+  // Dashboard states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [filtroDestino, setFiltroDestino] = useState("todos");
+  const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [sortField, setSortField] = useState<"fecha_inicio_viaje" | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const isEditing = !!editingVentaId;
+
+  const destinosUnicos = useMemo(() => {
+    const destinos = ventas.map(v => v.destino);
+    return Array.from(new Set(destinos)).filter(Boolean).sort();
+  }, [ventas]);
+
+  const kpis = useMemo(() => {
+    const now = new Date();
+    const currentMonthStart = startOfMonth(now);
+    const currentMonthEnd = endOfMonth(now);
+    const prevMonthStart = startOfMonth(subMonths(now, 1));
+    const prevMonthEnd = endOfMonth(subMonths(now, 1));
+    const sevenDaysAgo = subDays(now, 7);
+
+    let ventasMesActual = 0;
+    let ventasMesAnterior = 0;
+    let ventasSemana = 0;
+    let totalPendiente = 0;
+    const destinosCount: Record<string, number> = {};
+
+    ventas.forEach((v) => {
+      const fVenta = v.fecha_venta ? new Date(v.fecha_venta) : null;
+      
+      if (v.saldo_cliente > 0) {
+        totalPendiente += v.saldo_cliente;
+      }
+
+      if (fVenta) {
+        if (fVenta >= currentMonthStart && fVenta <= currentMonthEnd) {
+          ventasMesActual += v.valor_total_venta;
+          if (v.destino) {
+            destinosCount[v.destino] = (destinosCount[v.destino] || 0) + 1;
+          }
+        }
+        if (fVenta >= prevMonthStart && fVenta <= prevMonthEnd) {
+          ventasMesAnterior += v.valor_total_venta;
+        }
+        if (fVenta >= sevenDaysAgo && fVenta <= now) {
+          ventasSemana += v.valor_total_venta;
+        }
+      }
+    });
+
+    let destinoEstrella = "N/A";
+    let maxCount = 0;
+    Object.entries(destinosCount).forEach(([destino, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        destinoEstrella = destino;
+      }
+    });
+
+    const crecimiento = ventasMesAnterior > 0 
+      ? ((ventasMesActual - ventasMesAnterior) / ventasMesAnterior) * 100 
+      : (ventasMesActual > 0 ? 100 : 0);
+
+    return {
+      ventasMesActual,
+      ventasSemana,
+      destinoEstrella,
+      totalPendiente,
+      crecimiento
+    };
+  }, [ventas]);
+
+  const filteredVentas = useMemo(() => {
+    let result = ventas;
+
+    if (isAdmin && filtroAgente !== "todos") {
+      result = result.filter(v => v.agente_id === filtroAgente);
+    } else if (!isAdmin) {
+      result = result.filter(v => v.agente_id === user?.id);
+    }
+
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase();
+      result = result.filter(v => 
+        (v.clientes?.nombre_cliente || "").toLowerCase().includes(lowerSearch) ||
+        (v.codigo_reserva_aerea || "").toLowerCase().includes(lowerSearch) ||
+        (v.codigo_reserva_hotel || "").toLowerCase().includes(lowerSearch)
+      );
+    }
+
+    if (filtroDestino !== "todos") {
+      result = result.filter(v => v.destino === filtroDestino);
+    }
+
+    if (filtroEstado !== "todos") {
+      result = result.filter(v => v.estado_pago_cliente === filtroEstado);
+    }
+
+    if (dateRange?.from) {
+      result = result.filter(v => {
+        if (!v.fecha_venta) return false;
+        const fVenta = new Date(v.fecha_venta);
+        fVenta.setHours(0,0,0,0);
+        const from = new Date(dateRange.from!);
+        from.setHours(0,0,0,0);
+        
+        if (dateRange.to) {
+          const to = new Date(dateRange.to);
+          to.setHours(23,59,59,999);
+          return fVenta >= from && fVenta <= to;
+        }
+        return fVenta >= from;
+      });
+    }
+
+    if (sortField === "fecha_inicio_viaje") {
+      result.sort((a, b) => {
+        const aDate = a.fecha_inicio_viaje ? new Date(a.fecha_inicio_viaje).getTime() : 0;
+        const bDate = b.fecha_inicio_viaje ? new Date(b.fecha_inicio_viaje).getTime() : 0;
+        return sortDirection === "asc" ? aDate - bDate : bDate - aDate;
+      });
+    }
+
+    return result;
+  }, [ventas, isAdmin, filtroAgente, user?.id, searchTerm, filtroDestino, filtroEstado, dateRange, sortField, sortDirection]);
+
+  const totalFiltrado = useMemo(() => {
+    return filteredVentas.reduce((sum, v) => sum + (v.valor_total_venta || 0), 0);
+  }, [filteredVentas]);
+
+  const toggleSort = () => {
+    if (sortField === "fecha_inicio_viaje") {
+      if (sortDirection === "asc") setSortDirection("desc");
+      else {
+        setSortField(null);
+        setSortDirection("asc");
+      }
+    } else {
+      setSortField("fecha_inicio_viaje");
+      setSortDirection("asc");
+    }
+  };
 
   const openCreateDialog = () => {
     setEditingVentaId(null);
@@ -102,6 +259,8 @@ export default function Ventas() {
       anticipo: 0,
       metodo_pago_anticipo: "Transferencia",
       costo_por_proveedor: v.costo_por_proveedor,
+      proveedor_id: "none",
+      plazo_pago_proveedor: "",
       plazo_pago_cliente: v.plazo_pago_cliente ?? "",
     });
     setOpen(true);
@@ -149,11 +308,20 @@ export default function Ventas() {
     if (data) setPerfiles(data);
   }, [isAdmin]);
 
+  const fetchProveedores = useCallback(async () => {
+    const { data } = await supabase
+      .from("proveedores")
+      .select("id, nombre")
+      .order("nombre");
+    if (data) setProveedores(data);
+  }, []);
+
   useEffect(() => {
     fetchVentas();
     fetchClientes();
     fetchPerfiles();
-  }, [fetchVentas, fetchClientes, fetchPerfiles]);
+    fetchProveedores();
+  }, [fetchVentas, fetchClientes, fetchPerfiles, fetchProveedores]);
 
   const getPerfilNombre = (id: string | null) => {
     if (!id) return "Sin asignar";
@@ -222,6 +390,22 @@ export default function Ventas() {
         return;
       }
 
+      let errorCxPMessage = null;
+      if (form.proveedor_id && form.proveedor_id !== "none") {
+        const { error: errorCxP } = await supabase
+          .from("cuentas_por_pagar")
+          .insert({
+            venta_id: nuevaVenta.id,
+            proveedor_id: form.proveedor_id,
+            monto_deuda: form.costo_por_proveedor,
+            plazo_pago_proveedor: form.plazo_pago_proveedor || null,
+            agente_id: agenteIdFinal,
+          });
+        if (errorCxP) {
+          errorCxPMessage = errorCxP.message;
+        }
+      }
+
       // Registrar el Anticipo en Cartera
       if (form.anticipo > 0) {
         const { error: errorPago } = await supabase
@@ -252,8 +436,14 @@ export default function Ventas() {
           fechaPago: new Date().toISOString().split("T")[0],
           tipoAbono: "Abono Inicial",
         });
-      } else {
-        toast.success("Venta registrada exitosamente");
+      } else if (!errorCxPMessage) {
+        toast.success("Reserva y Cuenta por Pagar creadas exitosamente");
+      }
+
+      if (errorCxPMessage) {
+        toast.warning("Reserva creada, pero falló la cuenta por pagar: " + errorCxPMessage);
+      } else if (form.proveedor_id && form.proveedor_id !== "none" && form.anticipo > 0) {
+        toast.success("Reserva y Cuenta por Pagar creadas exitosamente");
       }
     }
 
@@ -261,6 +451,8 @@ export default function Ventas() {
     setEditingVentaId(null);
     setOpen(false);
     fetchVentas();
+    queryClient.invalidateQueries({ queryKey: ["cuentas_por_pagar"] });
+    queryClient.invalidateQueries({ queryKey: ["ventas"] });
     setSaving(false);
   };
 
@@ -277,9 +469,6 @@ export default function Ventas() {
   const getClienteName = (v: VentaRow) =>
     v.clientes?.nombre_cliente ?? "Sin cliente";
 
-  const filteredVentas = isAdmin
-    ? ventas.filter((v) => filtroAgente === "todos" || v.agente_id === filtroAgente)
-    : ventas.filter((v) => v.agente_id === user?.id);
 
   return (
     <div className="space-y-4">
@@ -366,6 +555,28 @@ export default function Ventas() {
                     <Label>Costo Proveedor</Label>
                     <Input type="number" value={form.costo_por_proveedor || ""} onChange={(e) => setForm((p) => ({ ...p, costo_por_proveedor: Number(e.target.value) }))} />
                   </div>
+                  
+                  {!isEditing && (
+                    <>
+                      <div className="grid gap-1.5 border-l-2 border-primary/50 pl-3">
+                        <Label>Proveedor</Label>
+                        <Select value={form.proveedor_id} onValueChange={(v) => setForm((p) => ({ ...p, proveedor_id: v }))}>
+                          <SelectTrigger><SelectValue placeholder="Sin asignar" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Sin asignar</SelectItem>
+                            {proveedores.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-1.5 border-l-2 border-primary/50 pl-3">
+                        <Label>Plazo Máximo de Pago (Proveedor)</Label>
+                        <Input type="date" value={form.plazo_pago_proveedor} onChange={(e) => setForm((p) => ({ ...p, plazo_pago_proveedor: e.target.value }))} />
+                      </div>
+                    </>
+                  )}
+
                   <div className="grid gap-1.5">
                     <Label>Ingreso Agencia (proyectado)</Label>
                     <Input value={formatCurrency(ingreso >= 0 ? ingreso : 0)} readOnly className="bg-muted font-semibold text-success" />
@@ -401,12 +612,131 @@ export default function Ventas() {
         </Dialog>
       </div>
 
-      {isAdmin && (
-        <div className="flex items-center gap-2 bg-card/60 p-3 rounded-xl border border-border/50">
-          <Filter className="h-4 w-4 text-muted-foreground" />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardContent className="p-6 flex flex-col gap-1">
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span className="text-sm font-medium">Ventas del Mes</span>
+              <Wallet className="h-4 w-4" />
+            </div>
+            <div className="text-2xl font-bold">{formatCurrency(kpis.ventasMesActual)}</div>
+            <div className={`text-xs flex items-center mt-1 ${kpis.crecimiento >= 0 ? "text-green-600" : "text-red-600"}`}>
+              {kpis.crecimiento >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+              {Math.abs(kpis.crecimiento).toFixed(1)}% vs mes anterior
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6 flex flex-col gap-1">
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span className="text-sm font-medium">Ventas de la Semana</span>
+              <CreditCard className="h-4 w-4" />
+            </div>
+            <div className="text-2xl font-bold">{formatCurrency(kpis.ventasSemana)}</div>
+            <div className="text-xs text-muted-foreground mt-1">Últimos 7 días</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6 flex flex-col gap-1">
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span className="text-sm font-medium">Destino Estrella</span>
+              <MapPin className="h-4 w-4" />
+            </div>
+            <div className="text-2xl font-bold capitalize">{kpis.destinoEstrella.toLowerCase()}</div>
+            <div className="text-xs text-muted-foreground mt-1">En el mes actual</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6 flex flex-col gap-1">
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span className="text-sm font-medium">Por Recaudar</span>
+              <Wallet className="h-4 w-4" />
+            </div>
+            <div className="text-2xl font-bold text-orange-600">{formatCurrency(kpis.totalPendiente)}</div>
+            <div className="text-xs text-muted-foreground mt-1">Saldo pendiente global</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-3 bg-card p-4 rounded-xl shadow-sm border">
+        {/* Buscador */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Buscar por cliente, vuelo, reserva..." 
+            className="pl-9 bg-background"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        {/* Filtro Rango de Fechas */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className={`justify-start text-left font-normal w-full lg:w-[240px] bg-background ${!dateRange && "text-muted-foreground"}`}>
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateRange?.from ? (
+                dateRange.to ? (
+                  <>
+                    {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
+                  </>
+                ) : (
+                  format(dateRange.from, "LLL dd, y")
+                )
+              ) : (
+                <span>Filtrar por fecha de venta...</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <div className="flex border-b">
+              <div className="flex flex-col gap-1 p-3 border-r bg-muted/20 w-[140px]">
+                <Button variant="ghost" size="sm" className="justify-start" onClick={() => setDateRange({ from: startOfMonth(new Date()), to: endOfMonth(new Date()) })}>Este mes</Button>
+                <Button variant="ghost" size="sm" className="justify-start" onClick={() => setDateRange({ from: startOfMonth(subMonths(new Date(), 1)), to: endOfMonth(subMonths(new Date(), 1)) })}>Mes pasado</Button>
+                <Button variant="ghost" size="sm" className="justify-start" onClick={() => setDateRange({ from: subDays(new Date(), 7), to: new Date() })}>Últimos 7 días</Button>
+              </div>
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
+              />
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Filtro Destino */}
+        <Select value={filtroDestino} onValueChange={setFiltroDestino}>
+          <SelectTrigger className="w-full lg:w-[180px] bg-background">
+            <SelectValue placeholder="Destino" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos los destinos</SelectItem>
+            {destinosUnicos.map(d => (
+              <SelectItem key={d} value={d}>{d}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Filtro Estado */}
+        <Select value={filtroEstado} onValueChange={setFiltroEstado}>
+          <SelectTrigger className="w-full lg:w-[160px] bg-background">
+            <SelectValue placeholder="Estado" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos los estados</SelectItem>
+            <SelectItem value="COMPLETO">Completos</SelectItem>
+            <SelectItem value="PENDIENTE">Pendientes</SelectItem>
+            <SelectItem value="PARCIAL">Abono Parcial</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {isAdmin && (
           <Select value={filtroAgente} onValueChange={setFiltroAgente}>
-            <SelectTrigger className="w-[220px] bg-background">
-              <SelectValue placeholder="Filtrar por agente" />
+            <SelectTrigger className="w-full lg:w-[180px] bg-background">
+              <SelectValue placeholder="Agente" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos los Agentes</SelectItem>
@@ -415,8 +745,20 @@ export default function Ventas() {
               ))}
             </SelectContent>
           </Select>
-        </div>
-      )}
+        )}
+
+        <Button variant="ghost" size="icon" title="Limpiar Filtros" onClick={() => {
+          setSearchTerm("");
+          setDateRange(undefined);
+          setFiltroDestino("todos");
+          setFiltroEstado("todos");
+          setFiltroAgente("todos");
+          setSortField(null);
+          setSortDirection("asc");
+        }}>
+          <X className="h-4 w-4 text-muted-foreground" />
+        </Button>
+      </div>
 
       <Card>
         <CardContent className="p-0">
@@ -426,7 +768,19 @@ export default function Ventas() {
                 <TableRow>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Destino</TableHead>
-                  <TableHead>Fecha Viaje</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={toggleSort}
+                  >
+                    <div className="flex items-center gap-1">
+                      Fecha Viaje
+                      {sortField === "fecha_inicio_viaje" ? (
+                        sortDirection === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                      ) : (
+                        <ArrowUpDown className="h-3 w-3 opacity-20" />
+                      )}
+                    </div>
+                  </TableHead>
                   <TableHead className="text-right">Valor Total</TableHead>
                   {isAdmin && <TableHead className="text-right">Costo Prov.</TableHead>}
                   {isAdmin && <TableHead className="text-right">Ingreso Agencia</TableHead>}
@@ -493,6 +847,13 @@ export default function Ventas() {
                   ))
                 )}
               </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={3} className="font-bold text-right text-muted-foreground">Total Filtrado:</TableCell>
+                  <TableCell className="font-bold text-right">{formatCurrency(totalFiltrado)}</TableCell>
+                  <TableCell colSpan={isAdmin ? 6 : 4}></TableCell>
+                </TableRow>
+              </TableFooter>
             </Table>
           </div>
         </CardContent>
