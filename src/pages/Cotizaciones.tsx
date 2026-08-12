@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { MessageCircle, FileText, User, StickyNote, Plus } from "lucide-react";
+import { MessageCircle, FileText, User, StickyNote, Plus, Check, ChevronsUpDown } from "lucide-react";
 import { formatPassengerBreakdown } from "@/lib/whatsapp";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +24,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+
+const normalizeDestino = (str: string) => {
+  if (!str) return "";
+  return str
+    .trim()
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+};
 
 interface Cotizacion {
   id: string;
@@ -81,6 +93,13 @@ const Cotizaciones = () => {
   const [selectedCotizacion, setSelectedCotizacion] = useState<Cotizacion | null>(null);
   const [notasTemp, setNotasTemp] = useState("");
   const [savingNotas, setSavingNotas] = useState(false);
+  const [openDestino, setOpenDestino] = useState(false);
+  const [searchDestino, setSearchDestino] = useState("");
+
+  const destinosUnicos = useMemo(() => {
+    const destinos = cotizaciones.map(c => c.destino);
+    return Array.from(new Set(destinos)).filter(Boolean).sort();
+  }, [cotizaciones]);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
@@ -130,11 +149,12 @@ const Cotizaciones = () => {
       return;
     }
     setCreating(true);
+    const destinoNormalizado = normalizeDestino(createForm.destino);
     const payload = {
       nombre: createForm.nombre,
       email: createForm.email || "No especificado",
       telefono: createForm.telefono || "",
-      destino: createForm.destino,
+      destino: destinoNormalizado,
       fecha_ida: createForm.fecha_ida || null,
       fecha_regreso: createForm.fecha_regreso || null,
       numero_personas: createForm.numero_personas ? Number(createForm.numero_personas) : null,
@@ -464,7 +484,82 @@ const Cotizaciones = () => {
             </div>
             <div className="grid gap-1.5 md:col-span-2">
               <Label>Destino de Interés *</Label>
-              <Input value={createForm.destino} onChange={e => setCreateForm(p => ({ ...p, destino: e.target.value }))} placeholder="Ej. Cancún, México" />
+              <Popover open={openDestino} onOpenChange={setOpenDestino}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openDestino}
+                    className="justify-between font-normal"
+                  >
+                    {createForm.destino || "Seleccionar o crear destino..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0" align="start">
+                  <Command>
+                    <CommandInput 
+                      placeholder="Buscar destino..." 
+                      value={searchDestino}
+                      onValueChange={setSearchDestino}
+                    />
+                    <CommandList>
+                      <CommandEmpty>
+                        {searchDestino.trim() !== "" ? (
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start text-sm px-2 py-1.5 h-auto font-normal"
+                            onClick={() => {
+                              setCreateForm((prev) => ({ ...prev, destino: searchDestino.trim() }));
+                              setOpenDestino(false);
+                              setSearchDestino("");
+                            }}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Crear "{searchDestino.trim()}"
+                          </Button>
+                        ) : (
+                          "No se encontraron destinos."
+                        )}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {destinosUnicos.map((destino) => (
+                          <CommandItem
+                            key={destino}
+                            value={destino}
+                            onSelect={() => {
+                              setCreateForm((prev) => ({ ...prev, destino: destino }));
+                              setOpenDestino(false);
+                              setSearchDestino("");
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                createForm.destino === destino ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {destino}
+                          </CommandItem>
+                        ))}
+                        {searchDestino.trim() !== "" && !destinosUnicos.some(d => d.toLowerCase() === searchDestino.trim().toLowerCase()) && (
+                          <CommandItem
+                            value={`crear_${searchDestino}`}
+                            onSelect={() => {
+                              setCreateForm((prev) => ({ ...prev, destino: searchDestino.trim() }));
+                              setOpenDestino(false);
+                              setSearchDestino("");
+                            }}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Crear "{searchDestino.trim()}"
+                          </CommandItem>
+                        )}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="grid gap-1.5">
               <Label>Teléfono / WhatsApp</Label>
