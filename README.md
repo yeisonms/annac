@@ -1,4 +1,4 @@
 # Welcome to your Lovable project
 
-TODO: Document your project here yeison murcia 
+TODO: yeison murcia 
 mursat solutions
