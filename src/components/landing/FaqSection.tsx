@@ -47,8 +47,7 @@ export function FaqSection() {
             FAQ
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
-            Resolvemos{" "}
-            <span className="text-primary">tus dudas</span>
+            Preguntas Frecuentes (FAQ)
           </h2>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
             Todo lo que necesitas saber antes de empacar tus maletas.

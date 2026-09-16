@@ -393,6 +393,7 @@ export function QuoteFormSection() {
                 type="submit"
                 size="lg"
                 disabled={loading}
+                aria-label="Solicitar Cotización por WhatsApp"
                 className="w-full bg-coral hover:bg-coral/90 text-coral-foreground rounded-xl py-6 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 {loading ? (

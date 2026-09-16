@@ -78,7 +78,7 @@ export function HeroSection() {
       {/* Contenido (Overlay estático centrado) */}
       <div className="relative z-30 text-center px-4 max-w-4xl mx-auto mt-16 pointer-events-auto">
         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight mb-6 animate-in slide-in-from-bottom-6 duration-700">
-          Descubre el mundo{" "}
+          Diseñamos el viaje de tus sueños{" "}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-[hsl(197,71%,62%)] to-[hsl(197,71%,82%)]">
             a tu medida
           </span>
@@ -94,7 +94,7 @@ export function HeroSection() {
             className="w-full sm:w-auto bg-coral hover:bg-coral/90 text-coral-foreground text-base px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
             asChild
           >
-            <a href="#cotizar">Cotizar con un agente</a>
+            <a href="#cotizar" aria-label="Cotizar mi Viaje con un agente">Cotizar con un agente</a>
           </Button>
           
           <Button
@@ -102,7 +102,7 @@ export function HeroSection() {
             className="w-full sm:w-auto bg-white/10 hover:bg-white/20 border border-white/30 text-white backdrop-blur-sm text-base px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
             asChild
           >
-            <a href="https://reservas.annacviajesatumedida.com/" target="_blank" rel="noopener noreferrer">Cotiza en línea</a>
+            <a href="https://reservas.annacviajesatumedida.com/" target="_blank" rel="noopener noreferrer" aria-label="Cotizar mi Viaje en línea">Cotiza en línea</a>
           </Button>
         </div>
       </div>

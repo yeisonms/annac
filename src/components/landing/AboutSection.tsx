@@ -10,8 +10,8 @@ export function AboutSection() {
           <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-[4/3]">
             <img
               src={worldMapTravel}
-              alt="Mapa mundi de viajes por el mundo"
               loading="lazy"
+              alt="Por qué viajar con Annac - Agencia de Viajes y Paquetes Turísticos"
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--deep))]/60 via-[hsl(var(--deep))]/20 to-transparent" />
