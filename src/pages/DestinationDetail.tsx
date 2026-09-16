@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, Plane } from "lucide-react";
 import { destinationCategories } from "@/data/destinationsData";
@@ -11,6 +11,16 @@ const DestinationDetail = () => {
   const navigate = useNavigate();
   const category = destinationCategories.find((c) => c.slug === slug);
   const [selectedDest, setSelectedDest] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (category) {
+      document.title = `Paquetes y Viajes a ${category.name} | Annac Viajes a Tu Medida`;
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        metaDesc.setAttribute('content', `Descubre los mejores destinos y paquetes turísticos a ${category.name}. Diseñamos tu viaje a la medida con asesores expertos.`);
+      }
+    }
+  }, [category]);
 
   if (!category) {
     return (
@@ -31,13 +41,14 @@ const DestinationDetail = () => {
       <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden">
         <img
           src={category.img}
-          alt={category.name}
+          alt={`Paquetes turísticos y viajes a ${category.name} - Annac Viajes`}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 max-w-7xl mx-auto">
           <Link
             to="/#destinos"
+            aria-label="Volver a todos los destinos"
             className="inline-flex items-center gap-2 text-white/80 hover:text-white text-sm mb-3 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" /> Volver a destinos
@@ -77,6 +88,7 @@ const DestinationDetail = () => {
         <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
             onClick={() => navigate(`/?destino=${encodeURIComponent(category.name)}#cotizar`)}
+            aria-label={`Cotizar mi paquete a ${category.name}`}
             className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors shadow-lg"
           >
             <Plane className="h-5 w-5" />

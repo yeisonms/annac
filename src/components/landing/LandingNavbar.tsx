@@ -44,10 +44,10 @@ export function LandingNavbar() {
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-3">
             <Button size="sm" className="bg-coral hover:bg-coral/90 text-coral-foreground transition-all" asChild>
-              <a href="/#cotizar">Cotizar con agente</a>
+              <a href="/#cotizar" aria-label="Cotizar con agente">Cotizar con agente</a>
             </Button>
             <Button variant="outline" size="sm" className="transition-all" asChild>
-              <a href="https://reservas.annacviajesatumedida.com/" target="_blank" rel="noopener noreferrer">Cotiza en línea</a>
+              <a href="https://reservas.annacviajesatumedida.com/" target="_blank" rel="noopener noreferrer" aria-label="Cotizar en línea">Cotiza en línea</a>
             </Button>
           </div>
 
@@ -78,10 +78,10 @@ export function LandingNavbar() {
             ))}
             <div className="flex flex-col gap-2 pt-4 border-t mt-2">
               <Button size="sm" className="bg-coral hover:bg-coral/90 text-coral-foreground" asChild>
-                <a href="/#cotizar" onClick={() => setMobileOpen(false)}>Cotizar con agente</a>
+                <a href="/#cotizar" onClick={() => setMobileOpen(false)} aria-label="Cotizar con agente">Cotizar con agente</a>
               </Button>
               <Button variant="outline" size="sm" asChild>
-                <a href="https://reservas.annacviajesatumedida.com/" target="_blank" rel="noopener noreferrer" onClick={() => setMobileOpen(false)}>Cotiza en línea</a>
+                <a href="https://reservas.annacviajesatumedida.com/" target="_blank" rel="noopener noreferrer" onClick={() => setMobileOpen(false)} aria-label="Cotizar en línea">Cotiza en línea</a>
               </Button>
             </div>
           </div>

@@ -10,7 +10,7 @@ export function DestinationsSection() {
             Destinos destacados
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
-            ¿A dónde quieres ir?
+            Destinos Destacados
           </h2>
         </div>
 
@@ -23,7 +23,7 @@ export function DestinationsSection() {
             >
               <img
                 src={d.img}
-                alt={d.name}
+                alt={`Paquetes y viajes a ${d.name} - Annac Viajes`}
                 loading="lazy"
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               />

@@ -150,7 +150,7 @@ export function SocialProofSection() {
         {/* Success Cases */}
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-            Lo que nuestros viajeros <span className="text-primary">comparten con nosotros</span>
+            Casos de Éxito y Experiencias Reales
           </h2>
           <p className="text-muted-foreground mb-8">
             Capturas reales de experiencias inolvidables
@@ -171,7 +171,7 @@ export function SocialProofSection() {
                     <div className="overflow-hidden rounded-2xl border border-border/50 shadow-sm hover:shadow-lg transition-all duration-300">
                       <img
                         src={caso.url_captura}
-                        alt={`Experiencia de ${caso.nombre_cliente}`}
+                        alt={`Caso de éxito y experiencia real de ${caso.nombre_cliente} - Annac Viajes`}
                         loading="lazy"
                         className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
                       />
