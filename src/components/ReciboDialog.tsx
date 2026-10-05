@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { formatCurrency } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Loader2, MessageCircle, CheckCircle2, Plane, Receipt, Download, Share2 } from "lucide-react";
+import { Loader2, MessageCircle, CheckCircle2, Plane, Receipt, Download, Share2, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
 
@@ -15,12 +15,17 @@ export interface ReciboData {
   saldoPendiente: number;
   fechaPago: string;
   tipoAbono?: string;
+  fechaLimitePago?: string | null;
 }
 
 const buildReciboWhatsAppUrl = (recibo: ReciboData): string => {
   const numero = recibo.celular?.replace(/\D/g, "") || "";
   const tipo = recibo.tipoAbono || "Abono";
-  const mensaje = `¡Hola, ${recibo.nombreCliente}! ✈️\nConfirmamos la recepción de tu pago para tu próximo viaje a ${recibo.destino}.\n\n*Detalle de tu pago:*\n💰 ${tipo}: ${formatCurrency(recibo.valorAbono)}\n📅 Fecha: ${recibo.fechaPago}\n\n*Estado de tu cuenta:*\n💵 Total del viaje: ${formatCurrency(recibo.valorTotal)}\n📉 Saldo pendiente: ${formatCurrency(recibo.saldoPendiente)}\n\n¡Gracias por confiar en nosotros para tus vacaciones! Si tienes dudas, escríbenos.`;
+  const fechaLimiteMsg =
+    recibo.fechaLimitePago && recibo.saldoPendiente > 0
+      ? `\n⏰ Fecha máxima de pago: ${recibo.fechaLimitePago}`
+      : "";
+  const mensaje = `¡Hola, ${recibo.nombreCliente}! ✈️\nConfirmamos la recepción de tu pago para tu próximo viaje a ${recibo.destino}.\n\n*Detalle de tu pago:*\n💰 ${tipo}: ${formatCurrency(recibo.valorAbono)}\n📅 Fecha: ${recibo.fechaPago}\n\n*Estado de tu cuenta:*\n💵 Total del viaje: ${formatCurrency(recibo.valorTotal)}\n📉 Saldo pendiente: ${formatCurrency(recibo.saldoPendiente)}${fechaLimiteMsg}\n\n¡Gracias por confiar en nosotros para tus vacaciones! Si tienes dudas, escríbenos.`;
 
   return `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
 };
@@ -159,6 +164,15 @@ export function ReciboDialog({ recibo, onClose }: ReciboDialogProps) {
                     {recibo.saldoPendiente === 0 ? "✅ PAGADO" : formatCurrency(recibo.saldoPendiente)}
                   </span>
                 </div>
+                {recibo.fechaLimitePago && recibo.saldoPendiente > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Fecha máxima de pago</span>
+                    <span className="text-sm font-semibold flex items-center gap-1 text-foreground">
+                      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                      {recibo.fechaLimitePago}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}

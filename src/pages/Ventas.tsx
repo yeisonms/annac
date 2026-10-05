@@ -449,6 +449,7 @@ export default function Ventas() {
           saldoPendiente: saldoCalculado,
           fechaPago: new Date().toISOString().split("T")[0],
           tipoAbono: "Abono Inicial",
+          fechaLimitePago: form.plazo_pago_cliente || null,
         });
       } else if (!errorCxPMessage) {
         toast.success("Reserva y Cuenta por Pagar creadas exitosamente");
