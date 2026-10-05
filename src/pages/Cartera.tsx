@@ -131,6 +131,7 @@ export default function Cartera() {
       saldoPendiente: nuevoSaldo,
       fechaPago,
       tipoAbono: "Abono realizado",
+      fechaLimitePago: selectedVenta.plazo_pago_cliente || null,
     });
 
     setSelectedVenta(null);
